@@ -1,0 +1,21 @@
+Package: LCtesterror
+Title: Estimates true prevalence from test data accounting for unknown test error.
+Version: 0.0.0.9000
+Authors@R: 
+    person("Katie", "Lihou", , "katie.lihou@bristol.ac.uk", role = c("aut", "cre"))
+Description: Estimates true prevalence from test data accounting for test error using bayesian LC modelling in stan. Options to account for dependencies between tests, delay until testing, and for changing prevalence over time.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: tidyverse, 
+ rstan, 
+ gt, 
+ gridExtra,
+ dplyr,
+ magrittr
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
