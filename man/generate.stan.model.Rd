@@ -2,7 +2,7 @@
 % Please edit documentation in R/Generate.stan.LCmodel_function.R
 \name{generate.stan.model}
 \alias{generate.stan.model}
-\title{Creates stan model code for different versions of the LC model that can be run in R using rstan.}
+\title{Generates stan model code for different model versions.}
 \usage{
 generate.stan.model(
   num_tests,
@@ -18,11 +18,14 @@ generate.stan.model(
 
 \item{include_delay}{Logical indicating whether delay until testing should be included in the model. Default = FALSE.}
 
-\item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.}
+\item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
+Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.}
 }
 \value{
 Stan LC model code.
 }
 \description{
-Creates stan model code for different versions of the LC model that can be run in R using rstan.
+Generates stan model code for different LC model versions.
+Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
+Function is automatically used in run.LC.model() function
 }

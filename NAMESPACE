@@ -2,5 +2,6 @@
 
 export(generate.stan.model)
 export(run.LC.model)
+importFrom(gt,gt)
 importFrom(rstan,sampling)
 importFrom(rstan,summary)

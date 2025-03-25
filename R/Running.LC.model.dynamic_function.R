@@ -1,8 +1,10 @@
 
-#' Uses test result data to run a bayesian latent class stan model to infer true disease prevalence whilst accounting for test error
+#' @title Runs model to infer disease prevalence from test data accounting for unknown test error.
+#' @description Runs bayesian LC stan model to infer true disease prevalence from test data accounting for unknown test error.
+#' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
 #'
-#' @param data A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.    
-#' @param num_tests A numeric value for the number of tests. 
+#' @param data A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.
+#' @param num_tests A numeric value for the number of tests.
 #' @param test_names_defined A character vector of identifiers / names for each test, given in the same order as the data. Default = NULL.
 #' @param data_ID An optional name identifier for the dataset used. Default = NULL.
 #' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.
@@ -11,90 +13,110 @@
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
 #' @param stan_arg Optional extra arguments to pass to the rstan::sampling function. Default = NULL.
 #' @param covariates Optional covariate to include in the model. Either "Time" or "Delay". If specified, relevant individual-level data must be provided in data. Default = NULL.
-#' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors. 
-#' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000. 
+#' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors.
+#' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.
 #' @param model_name Optional name of model. Default = NULL.
-#' @return Stan model fit and various summary outputs.
+#' @return Stan model fit and various summary outputs:
+#'   \describe{
+#'   \item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
+#'   \item{data_inputs}{List of input data used for model fitting.}
+#'   \item{stan_fit_summary_df}{A data frame summarising model parameters from rstan::summary.}
+#'   \item{prev_mean}{The estimated mean prevalence with 95% credible intervals (in models without time).}
+#'   \item{prev_time}{In models with time: A data frame of inferred prevalence estimates over time with 95% credible intervals.}
+#'   \item{prev_time_plot}{In models with time: Plotted inferred prevalence over time.}
+#'   \item{median_sens}{Median inferred sensitivity for each test with 95% credible intervals.}
+#'   \item{median_spec}{Median inferred specificity for each test with 95% credible intervals.}
+#'   \item{median_sens_spec_table}{A formatted table summarising each test's inferred sensitivity and specificity with 95% credible intervals .}
+#'   \item{traceplots}{Plots traceplots of log posterior, prevalence, sensitivity and specifcity.}
+#'   \item{pairs.plot_function}{A function to plot a pairs plot for prev, sens and spec parameters.}
+#'   \item{mean_Rhat}{The mean R-hat value across parameters.}
+#'   \item{mean_ESS}{The mean effective sample size (ESS) across parameters.}
+#'   \item{priors.posteriors.plots_function}{Plots prior vs posterior plots if prior_list was provided.}
+#'   \item{stan_code}{The generated Stan model code.}
+#'   \item{include_time}{Logical; whether time was included in the model.}
+#'   \item{include_delay}{Logical; whether delay was included in the model.}
+#' }
 #' @export
 #' @importFrom rstan summary
 #' @importFrom rstan sampling
-#' 
+#' @importFrom gt gt
+#'
 
-run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL, 
-                         dependency_groups = list(), 
+run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL,
+                         dependency_groups = list(),
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, prior_list = NULL, n_samples=iter,
-                         model_name=NULL) { 
-  
+                         model_name=NULL) {
+
   # Use tryCatch to handle errors inside the function
   result <- tryCatch({
-    
+
     Individuals <- c(1:(nrow(data)))
     data_long <- cbind(Individuals, data)
-    test_names <- as.character(seq_len(num_tests)) 
+    test_names <- as.character(seq_len(num_tests))
     print(paste("test_names:", paste(test_names, collapse=", ")))
-    
+
     if (!is.null(covariates)) {
       col_names <- c("N", test_names, covariates)  # Include covariate names if present
     } else {
-      col_names <- c("N", test_names)  
+      col_names <- c("N", test_names)
     }
-    
+
     if ("delay" %in% tolower(covariates)) {
       delay_names <- list()
       for(i in 1:num_tests) {
         delay_name <- paste0("delay_", i)
         delay_names[i] <- delay_name
       }
-      col_names <- c("N", test_names, delay_names) 
+      col_names <- c("N", test_names, delay_names)
     }
-    
+
     print(paste("col_names_data:", paste(colnames(data_long), collapse=", ")))
     print(paste("col_names_defined:", paste(col_names, collapse=", ")))
     colnames(data_long) <- col_names
     print(paste("col_names:", paste(colnames(data_long), collapse=", ")))
-    
+
     numeric_cols <- grep("^[0-9]+$", colnames(data_long), value = TRUE)
     print(paste("numeric_cols:", paste(numeric_cols, collapse=", ")))
-    
+
     test_result_data_long <- data_long %>%
-      pivot_longer(cols = all_of(numeric_cols), names_to = "T", values_to = "y") 
+      pivot_longer(cols = all_of(numeric_cols), names_to = "T", values_to = "y")
     print("test_result_data_long:")
     print(test_result_data_long)
-    
+
     if ("delay" %in% tolower(covariates)) {
-      
+
       test_result_data_long <- test_result_data_long %>%
-        dplyr::select(-starts_with("delay")) 
+        dplyr::select(-starts_with("delay"))
       print("test_result_data_long (after removing delay columns):")
       print(test_result_data_long)
-      
+
       delay_data_long <- data_long %>%
         pivot_longer(cols = all_of(starts_with("delay")), names_to = "T_delay", values_to = "delay") %>%
-        dplyr::select(delay) 
+        dplyr::select(delay)
       print("delay_data_long:")
       print(delay_data_long)
-      
+
       test_data_long <- cbind(test_result_data_long, delay_data_long)
       print("test_data_long (after merging delay data):")
       print(test_data_long)
-      
+
     } else { test_data_long <- test_result_data_long
     print("test_data_long (no delay data):")
     print(test_data_long)  }
-    
-    
+
+
     test_data_long <- na.omit(test_data_long)
     print("test_data_long (after removing NAs):")
     print(test_data_long)
-    
+
     tt <- as.numeric(test_data_long$T)
     nn <- as.numeric(test_data_long$N)
     y <- as.numeric(as.character(test_data_long$y))
     T <- as.numeric(length(seq_len(num_tests)))
     O <- nrow(test_data_long)
     N <- n_distinct(test_data_long$N)
-    # Matrix of all test combinations 
+    # Matrix of all test combinations
     test_names <- paste0("test", seq_len(num_tests))
     test_list <- setNames(replicate(num_tests, c(0, 1), simplify = FALSE), test_names)
     comb_list <- expand.grid(test_list) # Generate all test combinations
@@ -111,27 +133,27 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
     # Get number of unique test combinations
     C <- as.numeric(nrow(comb_matrix))
     comb_matrix_df <- as.data.frame(comb_matrix)
-    rownames(comb_matrix_df) <- NULL  
-    colnames(comb_matrix_df) <- NULL   
-    
+    rownames(comb_matrix_df) <- NULL
+    colnames(comb_matrix_df) <- NULL
+
     #add covariates if given
     time_points <- NULL
     d <- NULL
-    
+
     # only check for "time" and "delay" if covariates is not NULL
     if (!is.null(covariates)) {
-      
+
       # Time - add if specified as a covariate
       if ("time" %in% tolower(covariates)) {
         if (!"Time" %in% colnames(test_data_long)) {
           stop("Error: `Time` column is missing from dataset but `time` is in covariates.")
         }
-        time_points_data <- test_data_long %>% 
-          group_by(N) %>% 
+        time_points_data <- test_data_long %>%
+          group_by(N) %>%
           summarise(time_points = mean(Time, na.rm = TRUE))
         time_points <- as.numeric(time_points_data$time_points)
       }
-      
+
       # Delay - add if specified as a covariate
       if ("delay" %in% tolower(covariates)) {
         if (!"delay" %in% colnames(test_data_long)) {
@@ -148,26 +170,26 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
         print(d)
       }
     }
-    
+
     #for ragged model
     s <- test_data_long %>% group_by(N) %>% summarise(group = n())
     s <- as.numeric(s$group)
-    
+
     # Assign test depdency groups - think i can remove?
     test_to_group <- rep(0, num_tests)  # Default to 0 if no group assigned
     for (g in seq_along(dependency_groups)) {
       test_to_group[dependency_groups[[g]]] <- g  # Assign group number
     }
-    
+
     #G <- as.numeric(length(unique(test_to_group)))
-    
+
     # Identify valid dependency groups (ignoring single-test groups)
-    valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)  
+    valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
     num_valid_groups <- length(valid_groups)
     G <- num_valid_groups
-    
+
     #Data for model
-    stan_data <- list(T=T, N=N, O=O, tt=tt, y=y, s=s, C=C, 
+    stan_data <- list(T=T, N=N, O=O, tt=tt, y=y, s=s, C=C,
                       comb_matrix=comb_matrix_df,
                       test_to_group = test_to_group, G=G)
     if (!is.null(time_points)) { #add time points if time data given
@@ -176,11 +198,11 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
     if (!is.null(d)) { #add delay data if delay data is given
       stan_data$delay_days <- d
     }
-    
+
     #dynamically generate stan code
     include_time <- FALSE  # Default to FALSE
     include_delay <- FALSE  # Default to FALSE
-    
+
     if (!is.null(covariates)) {
       if ("time" %in% tolower(covariates)) {
         include_time <- TRUE
@@ -193,34 +215,34 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
     print(stan_code)
     # Compile the Stan model from the generated code
     stan_model_compiled <- rstan::stan_model(model_code = stan_code)
-    
+
     # Use parallel processing for chains
-    rstan_options(auto_write = TRUE)           
+    rstan_options(auto_write = TRUE)
     options(mc.cores = parallel::detectCores())
-    
+
     #model run
-    stan_fit <- rstan::sampling(stan_model_compiled, 
-                         data = stan_data, 
-                         iter = iter, 
-                         seed = 1234, 
-                         chains = chains, 
+    stan_fit <- rstan::sampling(stan_model_compiled,
+                         data = stan_data,
+                         iter = iter,
+                         seed = 1234,
+                         chains = chains,
                          warmup = warmup,
                          !!!stan_arg)  # Pass additional arguments using bang bang bang to unpack list
-    
+
     #model outputs
-    # 
+    #
     # #Model summary df
     fit_summary <- rstan::summary(stan_fit)
     stan_fit_summary <- fit_summary$summary #summary for all chains merged. #se_mean = monte carlo standard errors (from MCMC)
     stan_fit_summary_df <- as.data.frame(stan_fit_summary )
-    
+
     #Prev
     if("prev" %in% rownames(stan_fit_summary_df)) { #checks exact match
-      
+
       prev_rows <- grepl("^prev$", rownames(stan_fit_summary_df))
       stan_fit_summary_prev <- subset(stan_fit_summary_df, prev_rows)
       stan_fit_summary_prev_df <- stan_fit_summary_prev %>% dplyr::select(mean, '2.5%', '97.5%')
-      
+
       #Function to format prevalence:
       format.prevalence <- function(summary_row) {
         # Extract relevant values and convert to percentages
@@ -231,14 +253,14 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
         prevalence <- format(round(prevalence, 1), nsmall = 1)
         lower_ci <- format(round(lower_ci, 1), nsmall = 1)
         upper_ci <- format(round(upper_ci, 1), nsmall = 1)
-        
+
         result <- paste0("Mean prevalence: ", prevalence, "% (", lower_ci, "-", upper_ci, "%)")
         return(result)
       }
-      
+
       prev_mean <- format.prevalence(stan_fit_summary_prev_df)
     }
-    
+
     else {
       #Prev over time
       prev_time_rows <- grepl("^weekly_prevalence", rownames(stan_fit_summary_df))
@@ -246,31 +268,31 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
       stan_fit_summary_prev_time_df <- stan_fit_summary_prev_time %>% dplyr::select(mean, '2.5%', '97.5%') %>%
         mutate(week = row_number()) %>%
         rename(CI_min = '2.5%', CI_max = '97.5%', mean_prevalence = mean)
-      
+
       prev_time_plot <- stan_fit_summary_prev_time_df %>%
         ggplot(aes(y=mean_prevalence, x=week)) +
         geom_point() +
         geom_ribbon(aes(ymin = CI_min, ymax = CI_max), alpha=0.3, fill="grey") +
         theme_bw()
-      
+
     }
-    
-    
-    
+
+
+
     #Sens/spec
     sens_rows <- grepl("^Se_median", rownames(stan_fit_summary_df))
     stan_fit_summary_sens_median <- stan_fit_summary_df %>%
       subset(sens_rows) %>%
       dplyr::select(mean, '2.5%', '97.5%')
-    
+
     spec_rows <- grepl("^Sp_median", rownames(stan_fit_summary_df))
     stan_fit_summary_spec_median <- stan_fit_summary_df %>%
       subset(spec_rows) %>%
       dplyr::select(mean, '2.5%', '97.5%')
-    
+
     #Function to format sens/spec
     sens.spec.table <- function(summary_df, data_name = NULL, test_names, model_fit, model_name=NULL) {
-      
+
       # Extract rows for sensitivity and specificity
       sens_rows <- grepl("^Se_median", rownames(summary_df))
       spec_rows <- grepl("^Sp_median", rownames(summary_df))
@@ -289,41 +311,41 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
         dplyr::select(Specificity)
       # Combine into one table
       combined_table <- cbind(sens_table, spec_table)
-      
+
       # Extract model info
       iterations <- model_fit@sim$iter
       chains <- dim(stan_fit)[2]
       warmup <- model_fit@sim$warmup
-      
+
       # Create gt table
       gt_table <- combined_table %>%
-        gt(rownames_to_stub = TRUE) %>%
+        gt::gt(rownames_to_stub = TRUE) %>%
         tab_header(title = "Median sens/spec (mean across chains (95%CI))",
                    subtitle = sprintf("Model: %s; Data: %s; Iterations: %d; Warmup: %d; Chains: %d",
-                                      model_name, data_name, 
-                                      ifelse(exists("iterations"), iterations, NA), 
-                                      ifelse(exists("warmup"), warmup, NA), 
+                                      model_name, data_name,
+                                      ifelse(exists("iterations"), iterations, NA),
+                                      ifelse(exists("warmup"), warmup, NA),
                                       ifelse(exists("chains"), chains, NA))
                    )
-      
+
       return(gt_table)
     }
-    
+
     if (is.null(test_names_defined)) {
       test_names <- test_names }
     else {
       test_names <- test_names_defined
     }
-    
-    if (!exists("model_name")) { model_name <- "unknown_model" }  
-    
-    if (!exists("data_ID")) { data_ID <- "unknown_data" }  
-    
+
+    if (!exists("model_name")) { model_name <- "unknown_model" }
+
+    if (!exists("data_ID")) { data_ID <- "unknown_data" }
+
     sens_spec_table <- sens.spec.table(summary_df = stan_fit_summary_df,
                                        data_name = data_ID, test_names = test_names,
                                        model_fit = stan_fit,
                                        model_name = model_name)
-    
+
     #Traceplots
     plot.stan.mod <- function(stan_mod) {
       plots <- list()
@@ -339,7 +361,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
       }
       # other parameters to check and plot
       params_to_plot <- c("Se_mean", "Sp_mean", "Se_median", "Sp_median")
-      
+
       for (param in params_to_plot) {
         if (param %in% available_params) {
           plots[[paste0("stan_dens_", param)]] <- stan_dens(stan_mod, pars = param, separate_chains = TRUE)
@@ -348,16 +370,16 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
       return(plots)
     }
     trace_plots <- plot.stan.mod(stan_fit)
-    
+
     #pairs plot
     pairs_plot <- function() {
       pairs(stan_fit, pars = c("prev", "Se_median", "Sp_median"))
     }
-    
+
     #mean Rhat and ESS
     mean_Rhat <- mean(stan_fit_summary[, "Rhat"], na.rm = TRUE)
     mean_ESS <- mean(stan_fit_summary[, "n_eff"], na.rm = TRUE)
-    
+
     #Priors/posteriors plots
     priors.posteriors.plots <- function(stan_fit, n_samples, prior_list = list()) {
       set.seed(123)
@@ -366,7 +388,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
       priors <- prior_list
       param_names <- names(priors)
       pp_plots <- list()
-      
+
       # Loop - dynamically adjusts number of posterior samples to match prior samples
       for (param in param_names) {
         if (param %in% names(posterior_samples)) {  # Check if parameter exists in Stan output
@@ -389,7 +411,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
       }
       return(pp_plots)
     }
-    
+
     priors.posteriors.plots_function <- function() {
       pp_plots <- priors.posteriors.plots(stan_fit, n_samples, prior_list)
       if (length(pp_plots) > 0) {
@@ -398,9 +420,9 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
         message("No prior/posterior plots")
       }
     }
-    
-    
-    return(list(stan_fit = stan_fit, 
+
+
+    return(list(stan_fit = stan_fit,
                 data_inputs = stan_data,
                 stan_fit_summary_df = stan_fit_summary_df,
                 prev_mean = if (exists("prev_mean")) prev_mean else NULL,
@@ -417,9 +439,9 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL
                 stan_code = stan_code,
                 include_time = include_time,
                 include_delay = include_delay
-                
+
     ) )
-    
+
   }, error = function(e) {
     message("! Error in `run.LC.model()`: ", e$message)
     return(list(

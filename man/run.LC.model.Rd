@@ -2,7 +2,7 @@
 % Please edit documentation in R/Running.LC.model.dynamic_function.R
 \name{run.LC.model}
 \alias{run.LC.model}
-\title{Uses test result data to run a bayesian latent class stan model to infer true disease prevalence whilst accounting for test error}
+\title{Runs model to infer disease prevalence from test data accounting for unknown test error.}
 \usage{
 run.LC.model(
   data,
@@ -48,8 +48,28 @@ run.LC.model(
 \item{model_name}{Optional name of model. Default = NULL.}
 }
 \value{
-Stan model fit and various summary outputs.
+Stan model fit and various summary outputs:
+\describe{
+\item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
+\item{data_inputs}{List of input data used for model fitting.}
+\item{stan_fit_summary_df}{A data frame summarising model parameters from rstan::summary.}
+\item{prev_mean}{The estimated mean prevalence with 95\% credible intervals (in models without time).}
+\item{prev_time}{In models with time: A data frame of inferred prevalence estimates over time with 95\% credible intervals.}
+\item{prev_time_plot}{In models with time: Plotted inferred prevalence over time.}
+\item{median_sens}{Median inferred sensitivity for each test with 95\% credible intervals.}
+\item{median_spec}{Median inferred specificity for each test with 95\% credible intervals.}
+\item{median_sens_spec_table}{A formatted table summarising each test's inferred sensitivity and specificity with 95\% credible intervals .}
+\item{traceplots}{Plots traceplots of log posterior, prevalence, sensitivity and specifcity.}
+\item{pairs.plot_function}{A function to plot a pairs plot for prev, sens and spec parameters.}
+\item{mean_Rhat}{The mean R-hat value across parameters.}
+\item{mean_ESS}{The mean effective sample size (ESS) across parameters.}
+\item{priors.posteriors.plots_function}{Plots prior vs posterior plots if prior_list was provided.}
+\item{stan_code}{The generated Stan model code.}
+\item{include_time}{Logical; whether time was included in the model.}
+\item{include_delay}{Logical; whether delay was included in the model.}
+}
 }
 \description{
-Uses test result data to run a bayesian latent class stan model to infer true disease prevalence whilst accounting for test error
+Runs bayesian LC stan model to infer true disease prevalence from test data accounting for unknown test error.
+Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
 }
