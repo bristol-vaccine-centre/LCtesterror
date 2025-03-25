@@ -1,23 +1,26 @@
 Package: LCtesterror
-Title: Estimates true prevalence from test data accounting for unknown test error.
+Title: Estimates true prevalence from test data accounting for unknown test error
 Version: 0.0.0.9000
 Authors@R: 
     person("Katie", "Lihou", , "katie.lihou@bristol.ac.uk", role = c("aut", "cre"))
 Description: Estimates true prevalence from test data accounting for test error using bayesian LC modelling in stan. Options to account for dependencies between tests, delay until testing, and for changing prevalence over time. Model with time currently limited to fit time as a guassian (for seasonal diseases) - more flexible model in development. Will add function for simulating test data with error for model testing.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports: tidyverse, 
- rstan, 
+Imports: rstan, 
  gt, 
  gridExtra,
  dplyr,
+ tidyr,
  magrittr,
- EpiEstim,
- deSolve
+ ggplot2,
+ stats,
+ graphics,
+ utils 
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3

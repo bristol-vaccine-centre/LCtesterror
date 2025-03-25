@@ -37,10 +37,20 @@
 #'   \item{include_delay}{Logical; whether delay was included in the model.}
 #' }
 #' @export
-#' @importFrom rstan summary
-#' @importFrom rstan sampling
-#' @importFrom gt gt
-#'
+#' @importFrom rstan summary sampling rstan_options traceplot stan_dens
+#' @importFrom dplyr filter group_by summarise mutate rename row_number all_of starts_with n_distinct relocate summarise n
+#' @importFrom tidyr pivot_longer pivot_wider
+#' @importFrom gt gt tab_header
+#' @importFrom magrittr %>%
+#' @importFrom ggplot2 ggplot aes geom_density geom_point geom_ribbon labs theme_minimal theme_bw
+#' @importFrom stats median na.omit setNames
+#' @importFrom graphics pairs
+#' @importFrom utils globalVariables
+#' @name run.LC.model
+
+utils::globalVariables(c("delay", "Time", "week", "CI_min", "CI_max", "mean_prevalence",
+                         ".", "2.5%", "97.5%", "Sensitivity", "Specificity",
+                         "week", "CI_min", "CI_max", "value", "type", "n"))
 
 run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID =NULL,
                          dependency_groups = list(),

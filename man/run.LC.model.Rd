@@ -3,23 +3,6 @@
 \name{run.LC.model}
 \alias{run.LC.model}
 \title{Runs model to infer disease prevalence from test data accounting for unknown test error.}
-\usage{
-run.LC.model(
-  data,
-  num_tests,
-  test_names_defined = NULL,
-  data_ID = NULL,
-  dependency_groups = list(),
-  iter = 1000,
-  chains = 4,
-  warmup = 500,
-  stan_arg = list(),
-  covariates = NULL,
-  prior_list = NULL,
-  n_samples = iter,
-  model_name = NULL
-)
-}
 \arguments{
 \item{data}{A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.}
 

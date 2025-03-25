@@ -11,6 +11,9 @@
 #' Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.
 #' @return Stan LC model code.
 #' @export
+#' @importFrom magrittr %>%
+#' @importFrom gridExtra grid.arrange
+#' @name generate.stan.model
 #'
 generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()) {
 
