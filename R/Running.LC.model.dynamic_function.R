@@ -38,7 +38,7 @@
 #' }
 #' @export
 #' @importFrom rstan summary sampling rstan_options traceplot stan_dens
-#' @importFrom dplyr filter group_by summarise mutate rename row_number all_of starts_with n_distinct relocate summarise n
+#' @importFrom dplyr filter group_by mutate rename row_number all_of starts_with n_distinct relocate summarise n select
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom gt gt tab_header
 #' @importFrom magrittr %>%

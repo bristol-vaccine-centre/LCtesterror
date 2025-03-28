@@ -1,0 +1,118 @@
+
+#' @title Simulates test data based on true prevalence, sensitivity and specificity.
+#' @description Simulates test data for individuals based on true prevalence, and test sensitivity and specificity.
+#' Can simulate multiple test results for each individual with different test sens/spec parameters and different probabilities that each test is performed.
+#' The simulated data does not take into account dependencies between tests.
+#'
+#' @param disease_prev True population disease prevalence to simulate (between 0-1).
+#' @param sim_size Number of individuals to simulate test results for. Default = 1000.
+#' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
+#' @param seed for set.seed(). Default = 953.
+#' @return A table of test parameters (specified and simulated for comparison) and a table containing binary test results for each individual
+#'   \describe{
+#'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified test parameters (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
+#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters }
+#' }
+#' @export
+#' @importFrom dplyr filter group_by summarise mutate n cross_join select case_when rowwise left_join
+#' @importFrom magrittr %>%
+#' @importFrom tibble tibble
+#' @importFrom stats rbinom na.omit quantile
+#' @importFrom utils globalVariables
+#' @name sim.test.data
+#'
+
+utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
+                         "pat_id", "test_result", "any_positive",
+                         "CI", "test_positivity"))
+
+sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953) {
+
+  set.seed(seed)
+
+  tests <- tibble::tibble(
+    test_id = names(test_params),
+    sens = sapply(test_params, function(x) x$sens),
+    spec = sapply(test_params, function(x) x$spec),
+    p_performed = sapply(test_params, function(x) x$p_performed)
+  )
+
+  synth_data <- tibble::tibble(
+    pat_id = 1:sim_size,
+    true_prev = sample(c(rep(1, sim_size * disease_prev), rep(0, sim_size * (1 - disease_prev))),
+                       size = sim_size, replace = TRUE)
+  ) %>%
+    dplyr::cross_join(tests) %>%
+    dplyr::group_by(test_id) %>%
+    dplyr::mutate(
+      test_result = ifelse(
+        stats::rbinom(n(), 1, p_performed) == 0,
+        NA, # set test results which were not performed to NA
+        # otherwise get a result that is consistent with test sens and spec
+        #i.e binary test result based on proportion of population that will test positive with these parameters
+        true_prev * stats::rbinom(n(), 1, sens) + (1 - true_prev) * (1 - stats::rbinom(n(), 1, spec))
+        # add in test delay here?
+      )
+    )
+
+  # data set with a test per column (1-pos, 0-neg, NA-not done)
+  wide_synth_data1 <- synth_data %>%
+    dplyr::select(pat_id, true_prev, test_id, test_result) %>%
+    pivot_wider(names_from = test_id, values_from = test_result)
+  wide_synth_data <- wide_synth_data1 %>%
+    dplyr::select(-pat_id, -true_prev) %>%
+    dplyr::filter(rowSums(!is.na(.)) > 0) #remove individuals with no test results
+
+  # Check simulation is doing the right thing using RG:
+  rogan_gladen <- function(ap, sens, spec) {
+    dplyr::case_when(
+      ap <= 1 - spec ~ 0,
+      sens <= ap ~ 1,
+      TRUE ~ (ap + spec - 1) / (sens + spec - 1)
+    )
+  }
+
+  # Calculate an individuals overall test result
+  individual_positivity <- synth_data %>%
+    dplyr::group_by(pat_id, sens, spec) %>%
+    dplyr::summarise(any_positive = as.numeric(any(test_result == 1, na.rm = TRUE)), .groups = 'drop')
+  # calculate overall test positivity for each parameter combination
+  overall_test_positivity_summary <- individual_positivity %>%
+    dplyr::group_by(sens, spec) %>%
+    dplyr::summarise(overall_test_positivity = mean(any_positive), .groups = 'drop')
+  # Bootstrap to calculate confidence intervals (95%)
+  bootstrap_CI <- function(data, n_bootstrap = 1000) {
+    boot_results <- replicate(n_bootstrap, {
+      sample_data <- data[sample(1:nrow(data), nrow(data), replace = TRUE), ]
+      mean(sample_data$any_positive)
+    })
+    c(stats::quantile(boot_results, 0.025), stats::quantile(boot_results, 0.975))
+  }
+  # Apply bootstrap CI to overall test positivity
+  overall_test_positivity_summary <- overall_test_positivity_summary %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(CI = list(bootstrap_CI(individual_positivity[individual_positivity$sens == sens & individual_positivity$spec == spec, ]))) %>%
+    dplyr::mutate(CI_lower = CI[1], CI_upper = CI[2]) %>%
+    dplyr::select(-CI)
+  # can reconstruct the input parameters from the data?
+  reconstruct <- synth_data %>%
+    # the input parameters
+    dplyr::group_by(test_id, sens, spec, p_performed) %>%
+    # equivalents from the data
+    dplyr::summarise(
+      disease_prev = mean(true_prev),
+      test_positivity = mean(test_result, na.rm = TRUE),
+      test_coverage = mean(!is.na(test_result)),
+      .groups = 'drop'
+    ) %>%
+    dplyr::mutate(disease_prev_est = rogan_gladen(test_positivity, sens, spec)) %>% #estimates true disease prev using RG
+    # add overall test positivity into df
+    dplyr::left_join(overall_test_positivity_summary, by = c("sens", "spec"))
+
+  sim_results <- list()
+  sim_results$test_parameters <- reconstruct
+  sim_results$test_results <- wide_synth_data
+
+  return(sim_results)
+}
+
