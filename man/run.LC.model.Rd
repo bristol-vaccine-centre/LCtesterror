@@ -14,6 +14,10 @@
 
 \item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.}
 
+\item{prior_spec}{Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.}
+
+\item{prior_sens}{Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.}
+
 \item{iter}{The number of iterations for the stan model. Default = 1000.}
 
 \item{chains}{The number of chains for the stan model. Default = 4.}

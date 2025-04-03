@@ -8,6 +8,8 @@
 #' @param test_names_defined A character vector of identifiers / names for each test, given in the same order as the data. Default = NULL.
 #' @param data_ID An optional name identifier for the dataset used. Default = NULL.
 #' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.
+#' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
+#' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
 #' @param iter The number of iterations for the stan model. Default = 1000.
 #' @param chains The number of chains for the stan model. Default = 4.
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
@@ -54,6 +56,7 @@ utils::globalVariables(c("delay", "Time", "week", "CI_min", "CI_max", "mean_prev
 
 run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "data",
                          dependency_groups = list(),
+                         prior_spec = NULL, prior_sens = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, prior_list = NULL, n_samples=iter,
                          model_name=NULL) {
@@ -198,10 +201,35 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "da
     num_valid_groups <- length(valid_groups)
     G <- num_valid_groups
 
+
+    # Sens/spec priors
+    if(is.null(prior_spec)) {
+      prior_spec <- lapply(1:T, function(x) c(10, 1))  #Default Beta(10,1)
+    }
+
+    if (is.null(prior_sens)) {
+      prior_sens <- lapply(1:T, function(x) c(1, 1))  #Default Beta(1,1)
+    }
+
+    # Ensure prior_spec and prior_sens are correctly formatted
+    if (length(prior_spec) != T || length(prior_sens) != T) {
+      stop("prior_spec and prior_sens must be lists of length equal to num_tests")
+    }
+
+    # Extract prior alpha and beta parameters
+    alpha_spec <- sapply(prior_spec, function(p) p[1])
+    beta_spec <- sapply(prior_spec, function(p) p[2])
+    alpha_sens <- sapply(prior_sens, function(p) p[1])
+    beta_sens <- sapply(prior_sens, function(p) p[2])
+
+
     #Data for model
     stan_data <- list(T=T, N=N, O=O, tt=tt, y=y, s=s, C=C,
                       comb_matrix=comb_matrix_df,
-                      test_to_group = test_to_group, G=G)
+                      test_to_group = test_to_group, G=G,
+                      alpha_spec = alpha_spec, beta_spec = beta_spec,
+                      alpha_sens = alpha_sens, beta_sens = beta_sens
+                      )
     if (!is.null(time_points)) { #add time points if time data given
       stan_data$time_points <- time_points
     }
@@ -221,6 +249,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "da
         include_delay <- TRUE
       }
     }
+
     stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups)
     print(stan_code)
     # Compile the Stan model from the generated code

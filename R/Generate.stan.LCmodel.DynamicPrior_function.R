@@ -2,6 +2,7 @@
 #' @title Generates stan model code for different model versions.
 #' @description Generates stan model code for different LC model versions.
 #' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
+#' The prior distributions for specificity and sensitivity can be specified as beta distributions.
 #' Function is automatically used in run.LC.model() function
 #'
 #' @param num_tests Number of tests in data.
@@ -15,7 +16,8 @@
 #' @importFrom gridExtra grid.arrange
 #' @name generate.stan.model
 #'
-generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()) {
+generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()
+                                ) {
 
   # Identify valid dependency groups (ignoring single-test groups)
   valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
@@ -58,6 +60,12 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     array[O] int<lower=1, upper=T> tt; // Test index for each observation
     array[O] int<lower=0, upper=1> y; // Test results (0/1)
     int s[N]; // Number of tests per individual
+
+  // Dynamic prior parameters for sens/spec
+  real<lower=0> alpha_spec[T];
+  real<lower=0> beta_spec[T];
+  real<lower=0> alpha_sens[T];
+  real<lower=0> beta_sens[T];
     "
   if (add_dependency) {
     stan_code <- paste0(stan_code,
@@ -200,9 +208,9 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     ")
 
   for (t in 1:T){
-    stan_code <- paste0(stan_code,
-                        "a",t,"1 ~ beta(10, 1);
-                           a",t,"2 ~ beta(1, 1);
+    stan_code <- paste0(stan_code, "
+  target += beta_lpdf(a",t,"1 | alpha_spec[",t,"], beta_spec[",t,"]);
+  target += beta_lpdf(a",t,"2 | alpha_sens[",t,"], beta_sens[",t,"]);
                           ")
   }
 
