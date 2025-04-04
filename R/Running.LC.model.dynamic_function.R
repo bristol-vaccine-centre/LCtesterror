@@ -317,7 +317,6 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "da
     }
 
 
-
     #Sens/spec
     sens_rows <- grepl("^Se_median", rownames(stan_fit_summary_df))
     stan_fit_summary_sens_median <- stan_fit_summary_df %>%
@@ -328,6 +327,18 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "da
     stan_fit_summary_spec_median <- stan_fit_summary_df %>%
       subset(spec_rows) %>%
       dplyr::select(mean, '2.5%', '97.5%')
+
+    if (is.null(test_names_defined)) {
+      test_names <- test_names
+    } else {
+      test_names <- test_names_defined
+    }
+
+    if (is.null(model_name)) {
+      model_name <- "unknown" }
+
+    if (is.null(data_ID)) {
+      data_ID <- "unknown" }
 
     #Function to format sens/spec
     sens.spec.table <- function(summary_df, data_name = NULL, test_names, model_fit, model_name=NULL) {
@@ -365,20 +376,11 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "da
                                       ifelse(exists("iterations"), iterations, NA),
                                       ifelse(exists("warmup"), warmup, NA),
                                       ifelse(exists("chains"), chains, NA))
-                   )
+        )
 
       return(gt_table)
+
     }
-
-    if (is.null(test_names_defined)) {
-      test_names <- test_names }
-    else {
-      test_names <- test_names_defined
-    }
-
-    if (!exists("model_name")) { model_name <- "unknown_model" }
-
-    if (!exists("data_ID")) { data_ID <- "unknown_data" }
 
     sens_spec_table <- sens.spec.table(summary_df = stan_fit_summary_df,
                                        data_name = data_ID, test_names = test_names,
