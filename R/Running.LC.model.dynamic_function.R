@@ -54,7 +54,7 @@ utils::globalVariables(c("delay", "Time", "week", "CI_min", "CI_max", "mean_prev
                          ".", "2.5%", "97.5%", "Sensitivity", "Specificity",
                          "week", "CI_min", "CI_max", "value", "type", "n"))
 
-run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = "data",
+run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NULL,
                          dependency_groups = list(),
                          prior_spec = NULL, prior_sens = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
