@@ -163,7 +163,12 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_delay) {
-    stan_code <- paste0(stan_code, "matrix[N, T] delay = delay_unscaled / 10;\n")
+    stan_code <- paste0(stan_code, "matrix[N, T] delay;
+  for (t in 1:T) {
+    vector[N] col = delay_unscaled[, t];
+    delay[, t] = (col - mean(col)) / sd(col);
+  }
+  ")
   }
 
   for (t in 1:T){
@@ -234,7 +239,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_delay) {
-    stan_code <- paste0(stan_code, "delay_pos ~ normal(-0.5, 10);\n
+    stan_code <- paste0(stan_code, "delay_pos ~ normal(-0.5, 2);\n
     ")
   }
 
