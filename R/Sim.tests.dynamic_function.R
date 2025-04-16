@@ -8,10 +8,14 @@
 #' @param sim_size Number of individuals to simulate test results for. Default = 1000.
 #' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
 #' @param seed for set.seed(). Default = 953.
+#' @param delay Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.
+#' @param delay_distribution Optional specified distribution of delay effect. A function that takes an integer `n` and returns a vector of length `n` representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).
+#' @param delay_effect_fn Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)
 #' @return A table of test parameters (specified and simulated for comparison) and a table containing binary test results for each individual
 #'   \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified test parameters (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters }
+#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters.
+#'         If delay = TRUE, additional delay columns are included specifying the delay for each test.}
 #' }
 #' @export
 #' @importFrom dplyr filter group_by summarise mutate n cross_join select case_when rowwise left_join
@@ -26,7 +30,17 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
                          "CI", "test_positivity"))
 
-sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953) {
+default_delay_distribution <- function(n) sample(0:14, n, replace = TRUE)
+
+default_delay_effect <- function(delay_day, sens) {
+  pmax(sens - 0.02 * delay_day, 0.5)  # Ensures sens doesn't go below 0.5
+}
+
+
+sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953,
+                          delay = FALSE, delay_distribution = default_delay_distribution,
+                          delay_effect_fn = default_delay_effect
+                          ) {
 
   set.seed(seed)
 
@@ -43,25 +57,56 @@ sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953
                        size = sim_size, replace = TRUE)
   ) %>%
     dplyr::cross_join(tests) %>%
+    dplyr::mutate(delay_days = if (delay == TRUE) delay_distribution(n()) else 0
+    ) %>%
     dplyr::group_by(test_id) %>%
+    dplyr::mutate(adj_sens = if (delay == TRUE) delay_effect_fn(delay_days, sens) else sens
+      ) %>%
     dplyr::mutate(
       test_result = ifelse(
         stats::rbinom(n(), 1, p_performed) == 0,
         NA, # set test results which were not performed to NA
         # otherwise get a result that is consistent with test sens and spec
         #i.e binary test result based on proportion of population that will test positive with these parameters
-        true_prev * stats::rbinom(n(), 1, sens) + (1 - true_prev) * (1 - stats::rbinom(n(), 1, spec))
+        true_prev * stats::rbinom(n(), 1, adj_sens) + (1 - true_prev) * (1 - stats::rbinom(n(), 1, spec))
         # add in test delay here?
       )
     )
 
   # data set with a test per column (1-pos, 0-neg, NA-not done)
+  # Pivot wider
+  select_vars <- c("pat_id", "true_prev", "test_id", "test_result")
+  if (delay == TRUE) { select_vars <- c(select_vars, "delay_days") }
   wide_synth_data1 <- synth_data %>%
-    dplyr::select(pat_id, true_prev, test_id, test_result) %>%
-    pivot_wider(names_from = test_id, values_from = test_result)
+    dplyr::select(all_of(select_vars))
+
+  if (delay == TRUE) {
+    wide_synth_data1 <- wide_synth_data1 %>%
+      tidyr::pivot_wider(
+        names_from = test_id,
+        values_from = c(test_result, delay_days),
+        names_glue = "{.value}_{test_id}"
+      ) %>%
+      dplyr::rename_with(
+        .cols = tidyselect::starts_with("test_result_"),
+        .fn = ~ gsub("^test_result_", "", .x)
+      ) %>%
+      dplyr::rename_with(
+        .cols = tidyselect::starts_with("delay_days_"),
+        .fn = ~ gsub("^delay_days_", "delay_", .x)
+      )
+  } else {
+    wide_synth_data1 <- wide_synth_data1 %>%
+      tidyr::pivot_wider(
+        names_from = test_id,
+        values_from = test_result
+      )
+  }
+
+test_result_cols <- setdiff(names(wide_synth_data1), c("pat_id", "true_prev", grep("^delay_", names(wide_synth_data1), value = TRUE)))
   wide_synth_data <- wide_synth_data1 %>%
-    dplyr::select(-pat_id, -true_prev) %>%
-    dplyr::filter(rowSums(!is.na(.)) > 0) #remove individuals with no test results
+    dplyr::filter(rowSums(!is.na(dplyr::across(all_of(test_result_cols)))) > 0) %>% #remove individuals with no test results
+    dplyr::select(-pat_id, -true_prev)
 
   # Check simulation is doing the right thing using RG:
   rogan_gladen <- function(ap, sens, spec) {
@@ -79,7 +124,7 @@ sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953
   # calculate overall test positivity for each parameter combination
   overall_test_positivity_summary <- individual_positivity %>%
     dplyr::group_by(sens, spec) %>%
-    dplyr::summarise(overall_test_positivity = mean(any_positive), .groups = 'drop')
+    dplyr::summarise(overall_test_positivity_sim = mean(any_positive), .groups = 'drop')
   # Bootstrap to calculate confidence intervals (95%)
   bootstrap_CI <- function(data, n_bootstrap = 1000) {
     boot_results <- replicate(n_bootstrap, {
@@ -100,12 +145,13 @@ sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953
     dplyr::group_by(test_id, sens, spec, p_performed) %>%
     # equivalents from the data
     dplyr::summarise(
-      disease_prev = mean(true_prev),
-      test_positivity = mean(test_result, na.rm = TRUE),
-      test_coverage = mean(!is.na(test_result)),
+      sens_sim = mean(adj_sens),
+      disease_prev_sim = mean(true_prev),
+      test_positivity_sim = mean(test_result, na.rm = TRUE),
+      test_coverage_sim = mean(!is.na(test_result)),
       .groups = 'drop'
     ) %>%
-    dplyr::mutate(disease_prev_est = rogan_gladen(test_positivity, sens, spec)) %>% #estimates true disease prev using RG
+    dplyr::mutate(disease_prev_RG_est = rogan_gladen(test_positivity_sim, sens_sim, spec)) %>% #estimates true disease prev using RG
     # add overall test positivity into df
     dplyr::left_join(overall_test_positivity_summary, by = c("sens", "spec"))
 

@@ -1,4 +1,4 @@
-test_that("LC model runs with generate sim data (no delay or dependence)", {
+test_that("LC model runs with sim data (no delay or dependence)", {
 
   test_params <- list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8),
                       test3 = list(sens = 0.95, spec = 0.98, p_performed = 1), test4 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
@@ -16,4 +16,8 @@ test_that("LC model runs with generate sim data (no delay or dependence)", {
 
   test <- run.LC.model(data=sim_results$test_results, num_tests=num_tests,
                        iter=iter, chains=chains, warmup=warmup)
+
+  expect_false(is.null(test$stan_fit))
+
 })
+
