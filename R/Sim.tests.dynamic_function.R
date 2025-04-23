@@ -23,12 +23,14 @@
 #' @importFrom tibble tibble
 #' @importFrom stats rbinom na.omit quantile
 #' @importFrom utils globalVariables
+#' @importFrom tidyselect starts_with
 #' @name sim.test.data
 #'
 
 utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
-                         "CI", "test_positivity"))
+                         "CI", "test_positivity", "delay_days", "adj_sens",
+                         "test_positivity_sim", "sens_sim"))
 
 default_delay_distribution <- function(n) sample(0:14, n, replace = TRUE)
 

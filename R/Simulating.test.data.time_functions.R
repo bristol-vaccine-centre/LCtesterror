@@ -1,9 +1,4 @@
 
-library(deSolve)
-library(tidyverse)
-library(EpiEstim)
-
-
 #' @title Generates and solves an SIR model with seasonal forcing
 #' @description Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
 #'
@@ -16,19 +11,10 @@ library(EpiEstim)
 #' @importFrom deSolve ode
 #' @name run.sir.model
 
-params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001)
-years = 50
-N = 1
-init = list(
-  init_S = 0.99,
-  init_I = 0.01,
-  init_R = 0)
-
-mean_gi = 1/params$gamma
-max_t = 5 * mean_gi
 
 # Run SIR Model function
-run.sir.model <- function(years = years, N = N, init = init, params = params)
+run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
+                          params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
 
   {
 
@@ -163,9 +149,9 @@ run.sir.model <- function(years = years, N = N, init = init, params = params)
 #' @param init Initial state of the SIR model as a list. Default = init = list(init_S = 0.99, init_I = 0.01, init_R = 0).
 #' @param params SIR model parameters as a list. Defaults = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001).
 #' @return A list containing:
-#' \describe{
+#'  \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.
+#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.}
 #'   \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day of the year simulated}
 #'   \item{incidence_data}{Daily test-derived and true case counts, as well as overall sensitivity and specificity (combined across all tests assuming parallel testing with any test positive assumed a disease positive).}
 #'   \item{custom_R_estimate}{Daily mean estimated R(t) based on observed (test-positive) incidence from simulated test data with test error using custom method. Contains overall sens/spec (overall across tests)}
@@ -181,12 +167,14 @@ run.sir.model <- function(years = years, N = N, init = init, params = params)
 #' @importFrom dplyr mutate group_by summarise ungroup select starts_with
 #' @importFrom tidyr pivot_wider
 #' @importFrom tibble tibble
-#' @importFrom stats coef lm rnorm
+#' @importFrom stats coef lm rnorm sd pexp
 #' @name sim.test.data.time
 
 utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
-                         "CI", "test_positivity"))
+                         "CI", "test_positivity", "test_positivity_sim",
+                         "day_of_year", "true_disease", "ppv", "npv",
+                         "test_result_overall"))
 
 sim.test.data.time <- function(sim_size = 1000, days = 365, test_params, seed=953,
                                Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
@@ -355,7 +343,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365, test_params, seed=95
 
       # Store mean and SD of the sampled R_t values
       R_t_df$R_t_mean[i] <- mean(R_t_samples)
-      R_t_df$R_t_sd[i] <- sd(R_t_samples)
+      R_t_df$R_t_sd[i] <- stats::sd(R_t_samples)
 
       # Store growth rate and SE in growth_rate_df
       growth_rate_df$growth_rate[i] <- r
@@ -379,7 +367,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365, test_params, seed=95
 
   # Create discrete approximation of the exponential distribution
   gi_distribution <- sapply(0:max_t, function(t) {
-    pexp(t + 1, rate = 1 / mean_gi) - pexp(t, rate = 1 / mean_gi)
+    stats::pexp(t + 1, rate = 1 / mean_gi) - stats::pexp(t, rate = 1 / mean_gi)
   })
   # Ensure si_distr[1] = 0 and normalise the distribution
   gi_distribution[1] <- 0

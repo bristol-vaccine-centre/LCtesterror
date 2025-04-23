@@ -20,7 +20,8 @@ Imports: rstan,
  utils, 
  tibble,
  EpiEstim,
- deSolve
+ deSolve,
+ tidyselect
 Suggests: 
     knitr,
     rmarkdown,
