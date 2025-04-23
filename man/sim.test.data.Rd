@@ -11,12 +11,19 @@
 \item{test_params}{Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))}
 
 \item{seed}{for set.seed(). Default = 953.}
+
+\item{delay}{Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.}
+
+\item{delay_distribution}{Optional specified distribution of delay effect. A function that takes an integer \code{n} and returns a vector of length \code{n} representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).}
+
+\item{delay_effect_fn}{Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)}
 }
 \value{
 A table of test parameters (specified and simulated for comparison) and a table containing binary test results for each individual
 \describe{
 \item{test_parameters}{Test results table with row for each test (test_id) containing specified test parameters (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-\item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters }
+\item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters.
+If delay = TRUE, additional delay columns are included specifying the delay for each test.}
 }
 }
 \description{
