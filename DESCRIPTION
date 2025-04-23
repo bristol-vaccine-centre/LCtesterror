@@ -18,7 +18,9 @@ Imports: rstan,
  stats,
  graphics,
  utils, 
- tibble
+ tibble,
+ EpiEstim,
+ deSolve
 Suggests: 
     knitr,
     rmarkdown,
