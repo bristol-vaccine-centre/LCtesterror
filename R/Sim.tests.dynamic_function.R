@@ -69,7 +69,7 @@ sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953
         # otherwise get a result that is consistent with test sens and spec
         #i.e binary test result based on proportion of population that will test positive with these parameters
         true_prev * stats::rbinom(n(), 1, adj_sens) + (1 - true_prev) * (1 - stats::rbinom(n(), 1, spec))
-        # add in test delay here?
+        # test delay included here
       )
     )
 
