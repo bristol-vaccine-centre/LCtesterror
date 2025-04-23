@@ -24,6 +24,6 @@ params
 SIR model results including beta_t and R0_t and Re_t
 }
 \description{
-Generates and solves an SIR model with seasonal forcing
+Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
 }
 \keyword{datasets}
