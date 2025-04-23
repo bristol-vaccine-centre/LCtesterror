@@ -5,7 +5,7 @@ library(EpiEstim)
 
 
 #' @title Generates and solves an SIR model with seasonal forcing
-#' @description
+#' @description Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
 #'
 #' @param years Number of years to run SIR. Default = 50.
 #' @param N Population size. Default = 1.
