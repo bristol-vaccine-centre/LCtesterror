@@ -4,6 +4,7 @@
 #' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
 #'
 #' @param data A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.
+#' If time is included, time data should be included as the last column.
 #' @param num_tests A numeric value for the number of tests.
 #' @param test_names_defined A character vector of identifiers / names for each test, given in the same order as the data. Default = NULL.
 #' @param data_ID An optional name identifier for the dataset used. Default = NULL.
@@ -22,6 +23,7 @@
 #'   \describe{
 #'   \item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
 #'   \item{data_inputs}{List of input data used for model fitting.}
+#'   \item{test_data_input}{Test data used for model fitting in format given to function.}
 #'   \item{stan_fit_summary_df}{A data frame summarising model parameters from rstan::summary.}
 #'   \item{prev_mean}{The estimated mean prevalence with 95% credible intervals (in models without time).}
 #'   \item{prev_time}{In models with time: A data frame of inferred prevalence estimates over time with 95% credible intervals.}
@@ -158,12 +160,12 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
 
       # Time - add if specified as a covariate
       if ("time" %in% tolower(covariates)) {
-        if (!"Time" %in% colnames(test_data_long)) {
-          stop("Error: `Time` column is missing from dataset but `time` is in covariates.")
+        if (!"time" %in% colnames(test_data_long)) {
+          stop("Error: Time column is missing from dataset but time is in covariates.")
         }
         time_points_data <- test_data_long %>%
           group_by(N) %>%
-          summarise(time_points = mean(Time, na.rm = TRUE))
+          summarise(time_points = mean(time, na.rm = TRUE))
         time_points <- as.numeric(time_points_data$time_points)
       }
 
@@ -174,8 +176,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
         }
         d_NA <- test_data_long %>%
           dplyr::select(-y) %>%
-          pivot_wider(names_from = T, values_from = delay, names_prefix = "T_delay") %>%
-          relocate(N) %>%  # Ensure "N" column stays first
+          tidyr::pivot_wider(names_from = T, values_from = delay, names_prefix = "T_delay") %>%
+          dplyr::relocate(N) %>%  # Ensure "N" column stays first
           dplyr::select(N, order(as.numeric(gsub("T_delay", "", colnames(.)[-1])))+1) %>%
           dplyr::select(-N) %>%
           as.matrix()
@@ -465,6 +467,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
 
     return(list(stan_fit = stan_fit,
                 data_inputs = stan_data,
+                test_data_input = data,
                 stan_fit_summary_df = stan_fit_summary_df,
                 prev_mean = if (exists("prev_mean")) prev_mean else NULL,
                 prev_time = if (exists("stan_fit_summary_prev_time_df")) stan_fit_summary_prev_time_df else NULL,

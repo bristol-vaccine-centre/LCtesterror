@@ -150,7 +150,7 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' @param params SIR model parameters as a list. Defaults = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001).
 #' @return A list containing:
 #'  \describe{
-#'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
+#'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
 #'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.}
 #'   \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day of the year simulated}
 #'   \item{incidence_data}{Daily test-derived and true case counts, as well as overall sensitivity and specificity (combined across all tests assuming parallel testing with any test positive assumed a disease positive).}

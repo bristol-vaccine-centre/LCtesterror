@@ -4,7 +4,8 @@
 \alias{run.LC.model}
 \title{Runs model to infer disease prevalence from test data accounting for unknown test error.}
 \arguments{
-\item{data}{A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.}
+\item{data}{A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.
+If time is included, time data should be included as the last column.}
 
 \item{num_tests}{A numeric value for the number of tests.}
 
@@ -39,6 +40,7 @@ Stan model fit and various summary outputs:
 \describe{
 \item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
 \item{data_inputs}{List of input data used for model fitting.}
+\item{test_data_input}{Test data used for model fitting in format given to function.}
 \item{stan_fit_summary_df}{A data frame summarising model parameters from rstan::summary.}
 \item{prev_mean}{The estimated mean prevalence with 95\% credible intervals (in models without time).}
 \item{prev_time}{In models with time: A data frame of inferred prevalence estimates over time with 95\% credible intervals.}
