@@ -2,15 +2,18 @@
 #' @title Runs model to infer disease prevalence from test data accounting for unknown test error.
 #' @description Runs bayesian LC stan model to infer true disease prevalence from test data accounting for unknown test error.
 #' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
+#' Model compilation (which occurs after the code is printed) can take a few minutes.
 #'
 #' @param data A dataframe of binary test results with a column for each test and row for each individual. If delay until test covariates are to be included in the model, a column with delay data for each test should be included after all of the test result data columns, in the same test order as the test result data.
 #' If time is included, time data should be included as the last column.
 #' @param num_tests A numeric value for the number of tests.
 #' @param test_names_defined A character vector of identifiers / names for each test, given in the same order as the data. Default = NULL.
 #' @param data_ID An optional name identifier for the dataset used. Default = NULL.
-#' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.
+#' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
+#' Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.
 #' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
 #' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
+#' @param prior_delay Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).
 #' @param iter The number of iterations for the stan model. Default = 1000.
 #' @param chains The number of chains for the stan model. Default = 4.
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
@@ -59,6 +62,7 @@ utils::globalVariables(c("delay", "Time", "week", "CI_min", "CI_max", "mean_prev
 run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NULL,
                          dependency_groups = list(),
                          prior_spec = NULL, prior_sens = NULL,
+                         prior_delay = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, prior_list = NULL, n_samples=iter,
                          model_name=NULL) {
@@ -225,6 +229,15 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     beta_sens <- sapply(prior_sens, function(p) p[2])
 
 
+    #delay prior
+    if (is.null(prior_delay)) {
+      mu_delay <- as.numeric(-0.5)
+      sigma_delay <- as.numeric(2)
+    } else {
+      mu_delay <- as.numeric(prior_delay[1])
+      sigma_delay <- as.numeric(prior_delay[2])
+    }
+
     #Data for model
     stan_data <- list(T=T, N=N, O=O, tt=tt, y=y, s=s, C=C,
                       comb_matrix=comb_matrix_df,
@@ -237,6 +250,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     }
     if (!is.null(d)) { #add delay data if delay data is given
       stan_data$delay_days <- d
+      stan_data$mu_delay <- mu_delay
+      stan_data$sigma_delay <- sigma_delay
     }
 
     #dynamically generate stan code

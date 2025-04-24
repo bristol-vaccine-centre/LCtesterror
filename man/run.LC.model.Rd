@@ -13,11 +13,14 @@ If time is included, time data should be included as the last column.}
 
 \item{data_ID}{An optional name identifier for the dataset used. Default = NULL.}
 
-\item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Default = NULL.}
+\item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
+Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.}
 
 \item{prior_spec}{Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.}
 
 \item{prior_sens}{Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.}
+
+\item{prior_delay}{Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).}
 
 \item{iter}{The number of iterations for the stan model. Default = 1000.}
 
@@ -61,4 +64,5 @@ Stan model fit and various summary outputs:
 \description{
 Runs bayesian LC stan model to infer true disease prevalence from test data accounting for unknown test error.
 Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
+Model compilation (which occurs after the code is printed) can take a few minutes.
 }

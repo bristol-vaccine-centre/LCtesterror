@@ -78,7 +78,10 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_delay) {
-    stan_code <- paste0(stan_code, "matrix[N, T] delay_days;\n")
+    stan_code <- paste0(stan_code, "matrix[N, T] delay_days;\n
+                        real mu_delay;
+                        real sigma_delay;
+                        ")
   }
 
   stan_code <- paste0(stan_code,
@@ -239,7 +242,8 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_delay) {
-    stan_code <- paste0(stan_code, "delay_pos ~ normal(-0.5, 2);\n
+    stan_code <- paste0(stan_code, "
+      target += normal_lpdf(delay_pos | mu_delay, sigma_delay);
     ")
   }
 
@@ -274,7 +278,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
 
     for (t in 1:T) {
       print(\"Sp/Se loop - t =\", t);
-      Se_mean[t] = mean(prob[t,2,]); // Change to median if needed
+      Se_mean[t] = mean(prob[t,2,]);
       Sp_mean[t] = mean(1 - prob[t,1,]);
 
       // Median values
