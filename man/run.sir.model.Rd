@@ -22,8 +22,60 @@ run.sir.model(
 \item{params}{list of SIR paramters. Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001. If beta0 is null it is calculated based on desired_R0.}
 }
 \value{
-SIR model results including beta_t and R0_t and Re_t
+A dataframe of SIR model results at each timepoint.
+Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 }
 \description{
 Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
+}
+\examples{
+if (interactive()) {
+sir_output <- run.sir.model(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
+params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
+
+# Plot proportions in each compartment over time
+sir_output \%>\%
+ pivot_longer(cols = c("proportion_S", "proportion_I",
+ "proportion_R"), names_to = "Metric", values_to = "Proportion") \%>\%
+ ggplot(aes(x = time_in_years, y = Proportion)) +
+   geom_line(color = "red") +
+   facet_wrap(~ Metric) +
+   labs(title = "Proportion of Individuals Over Time",
+     x = "Time (years)",
+      y = "Proportion of Individuals") +
+   theme_classic()  +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1),
+     legend.key = element_rect(fill = "white", colour = NA),
+     legend.key.size = unit(1.2, "lines"),
+     legend.position = "bottom",
+     legend.text = element_text(size=10), legend.title = element_text(size=12),
+     axis.title = element_text(size = 14))
+
+# Plot population changes over time
+ggplot(sir_output, aes(x = time_in_years, y = calculated_N)) +
+ geom_line(color = "black") +
+  labs(title = "S+I+R population", x = "Time (years)",
+  y = "Population (N)") +
+ theme_classic()
+
+# Plot beta_t over time
+ggplot(output, aes(x = time_in_years, y = beta_t)) +
+ geom_line(color = "purple") +
+labs(title = "Seasonal transmission rate (Beta_t) over time",
+x = "Time (years)", y = "Beta_t") +
+ theme_classic()
+
+# Plot R0(t) over time (calculated as beta(t)/gamma)
+ggplot(output, aes(x = time_in_years, y = R0_t)) +
+ geom_line(color = "blue") +
+ labs(title = "Time-varying R0(t)", x = "Time (years)", y = "R0(t)") +
+ theme_classic()
+
+# Plot Re(t) over time (calculated as beta(t)/gamma * susceptible proportion)
+ggplot(output , aes(x = time_in_years, y = Re_t)) +
+ geom_line(color = "lightblue") +
+ labs(title = "Time-varying effective reproduction number Re(t)",
+ x = "Time (years)", y = "Re(t)") +
+ theme_classic()
+}
 }

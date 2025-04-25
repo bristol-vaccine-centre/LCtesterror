@@ -66,3 +66,59 @@ Runs bayesian LC stan model to infer true disease prevalence from test data acco
 Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
 Model compilation (which occurs after the code is printed) can take a few minutes.
 }
+\examples{
+if (interactive()) {
+# Example with no test dependence, delay, or time included
+# Simulate data
+sim_data <- sim.test.data(sim_size = 100)
+
+# Run LC model using simulated test results
+fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                      data_ID = "sim", model_name = "basic_sim",
+                      dependency_groups = NULL, covariates = NULL,
+                      iter=1000, chains=4, warmup=500)
+
+# View estimated prevalence, sens and spec, and traceplots
+fit$prev_mean
+fit$median_sens_spec_table
+fit$traceplots
+
+
+# Example with test dependence
+# Simulate data
+sim_data <- sim.test.data(sim_size = 100)
+
+# Run LC model using simulated test results
+fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                      data_ID = "sim", model_name = "dependence_sim",
+                      dependency_groups = list(c(1, 2), c(3, 4)), covariates = NULL,
+                      iter=1000, chains=4, warmup=500)
+
+
+# Example with 'delay until test' data
+# Simulate data
+sim_data <- sim.test.data(sim_size = 100, delay=TRUE)
+
+# Run LC model using simulated test results
+fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                      data_ID = "sim_delay", model_name = "delay_sim",
+                      dependency_groups = NULL, covariates = c("delay"),
+                      iter=1000, chains=4, warmup=500)
+
+
+# Example with changing prevalence over time (for a disease with a seasonal peak)
+# Simulate data
+sim_data <- sim.test.data.time(sim_size = 10)
+
+# Run LC model using simulated test results
+fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                      data_ID = "sim_time", model_name = "time_sim",
+                      dependency_groups = NULL, covariates = c("time"),
+                      iter=1000, chains=4, warmup=500)
+
+# Plot prev over time
+plots <- plot.prev.time(fit, sim_time_data = sim_data)
+plots$weekly_prev_plot
+}
+
+}

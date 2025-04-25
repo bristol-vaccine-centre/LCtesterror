@@ -17,3 +17,18 @@ Specified model name with the number of divergent transitions
 \description{
 Counts the number of divergent transitions in a fitted stan model.
 }
+\examples{
+if (interactive()) {
+# Simulate data
+sim_data <- sim.test.data(sim_size = 100)
+
+# Run LC model using simulated test results
+fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                      data_ID = "sim", model_name = "basic_sim",
+                      dependency_groups = NULL, covariates = NULL,
+                      iter=1000, chains=4, warmup=500)
+
+check.divergent.transitions(fit$stan_fit, model_name = "Test_model")
+}
+
+}

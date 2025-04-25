@@ -6,10 +6,62 @@
 #' @param N Population size. Default = 1.
 #' @param init List of initial state values. Default = init_S = 0.99; init_I = 0.01; init_R = 0.
 #' @param params list of SIR paramters. Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001. If beta0 is null it is calculated based on desired_R0.
-#' @return SIR model results including beta_t and R0_t and Re_t
+#' @return A dataframe of SIR model results at each timepoint.
+#' Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 #' @export
 #' @importFrom deSolve ode
 #' @name run.sir.model
+#'
+#' @examples
+#' if (interactive()) {
+#' sir_output <- run.sir.model(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
+#' params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
+#'
+#' # Plot proportions in each compartment over time
+#' sir_output %>%
+#'  pivot_longer(cols = c("proportion_S", "proportion_I",
+#'  "proportion_R"), names_to = "Metric", values_to = "Proportion") %>%
+#'  ggplot(aes(x = time_in_years, y = Proportion)) +
+#'    geom_line(color = "red") +
+#'    facet_wrap(~ Metric) +
+#'    labs(title = "Proportion of Individuals Over Time",
+#'      x = "Time (years)",
+#'       y = "Proportion of Individuals") +
+#'    theme_classic()  +
+#'    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+#'      legend.key = element_rect(fill = "white", colour = NA),
+#'      legend.key.size = unit(1.2, "lines"),
+#'      legend.position = "bottom",
+#'      legend.text = element_text(size=10), legend.title = element_text(size=12),
+#'      axis.title = element_text(size = 14))
+#'
+#' # Plot population changes over time
+#' ggplot(sir_output, aes(x = time_in_years, y = calculated_N)) +
+#'  geom_line(color = "black") +
+#'   labs(title = "S+I+R population", x = "Time (years)",
+#'   y = "Population (N)") +
+#'  theme_classic()
+#'
+#'# Plot beta_t over time
+#'ggplot(output, aes(x = time_in_years, y = beta_t)) +
+#'  geom_line(color = "purple") +
+#' labs(title = "Seasonal transmission rate (Beta_t) over time",
+#' x = "Time (years)", y = "Beta_t") +
+#'  theme_classic()
+#'
+#' # Plot R0(t) over time (calculated as beta(t)/gamma)
+#' ggplot(output, aes(x = time_in_years, y = R0_t)) +
+#'  geom_line(color = "blue") +
+#'  labs(title = "Time-varying R0(t)", x = "Time (years)", y = "R0(t)") +
+#'  theme_classic()
+#'
+#' # Plot Re(t) over time (calculated as beta(t)/gamma * susceptible proportion)
+#' ggplot(output , aes(x = time_in_years, y = Re_t)) +
+#'  geom_line(color = "lightblue") +
+#'  labs(title = "Time-varying effective reproduction number Re(t)",
+#'  x = "Time (years)", y = "Re(t)") +
+#'  theme_classic()
+#' }
 
 
 # Run SIR Model function
@@ -136,9 +188,10 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' Method 2: Uses the EpiEstim package with method = "non_parametric_si". The si distribution is based on the mean generation interval 1/gamma.
 #' Method 2 produces the R outputs 'epi_R_estimate' and 'epi_R_estimate_true' as returned from EpiEstim::estimate_R().
 #'
-#' @param sim_size Number of individuals to simulate test results for. Default = 1000.
+#' @param sim_size Number of individuals to simulate test results for at each timepoint. Default = 1000.
 #' @param days Number of days to simulate. Default = 365.
-#' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(sens = 0.95, spec = 0.98, p_performed = 1)
+#' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ), for each test.
+#' Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8))
 #' @param seed For set.seed(). Default = 953.
 #' @param Est_R_window Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.
 #' @param Est_R_n_samples Number of samples for uncertainty estimation in custom R(t). Default = 1000.
@@ -169,6 +222,16 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' @importFrom tibble tibble
 #' @importFrom stats coef lm rnorm sd pexp
 #' @name sim.test.data.time
+#' @examples
+#' if (interactive()) {
+#' sim_data <- sim.test.data.time(sim_size = 10, days=365,
+#' test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+#' test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)))
+#'
+#' #head(sim_data$test_results)
+#' }
 
 utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
@@ -176,7 +239,10 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "day_of_year", "true_disease", "ppv", "npv",
                          "test_result_overall"))
 
-sim.test.data.time <- function(sim_size = 1000, days = 365, test_params, seed=953,
+sim.test.data.time <- function(sim_size = 1000, days = 365,
+                               test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+                                                  test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
+                               seed=953,
                                Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
                                mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
                                years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),

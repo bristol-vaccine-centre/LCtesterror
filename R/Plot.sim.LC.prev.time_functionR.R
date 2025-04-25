@@ -15,6 +15,17 @@
 #' @importFrom dplyr group_by mutate rename case_when left_join if_else across all_of summarise
 #' @importFrom ggplot2 ggplot aes geom_point geom_ribbon geom_line geom_smooth labs theme_bw scale_color_manual scale_fill_manual guides guide_legend
 #' @name prev.time.plots
+#'
+#' @examples
+#' if (interactive()) {
+#' # Example with simulated data
+#' # (In this example the model will not converge
+#' # and CI's will be very wide because of small amount of simulated data)
+#' sim_data <- sim.test.data.time(sim_size=10)
+#' fit <- run.LC.model(sim_data$test_results, num_tests = 4, covariates = c("time"))
+#' plots <- prev.time.plots(fit, sim_time_data = sim_data)
+#' plots$weekly_prev_plot
+#'  }
 
 utils::globalVariables(c(
   "week", "mean", "CI_min", "CI_max", "mean_prevalence",

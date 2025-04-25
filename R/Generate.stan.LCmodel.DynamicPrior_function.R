@@ -1,7 +1,7 @@
 
 #' @title Generates stan model code for different model versions.
 #' @description Generates stan model code for different LC model versions.
-#' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates, and to specify dependency relationships between tests.
+#' Options to specify the number of tests, to include 'time' or 'delay' until testing as covariates (but not both), and to specify dependency relationships between tests.
 #' The prior distributions for specificity and sensitivity can be specified as beta distributions.
 #' Function is automatically used in run.LC.model() function
 #'
@@ -15,7 +15,28 @@
 #' @importFrom magrittr %>%
 #' @importFrom gridExtra grid.arrange
 #' @name generate.stan.model
+#' @examples
+#' if (interactive()) {
+#' # Basic model with 4 tests:
+#' generate.stan.model(num_tests = 4)
 #'
+#' # Model with 4 tests that have a dependence structure
+#' # (in this example tests 1+2 are correlated and tests 3+4 are correlated):
+#' generate.stan.model(num_tests = 4, dependency_groups = list(c(1, 2), c(3, 4)))
+#'
+#' # Model with 4 tests and delay or time modelled as a covariate:
+#' generate.stan.model(num_tests = 4, include_delay = TRUE)
+#' generate.stan.model(num_tests = 4, include_time = TRUE)
+#'
+#' # Model with 4 tests that have a dependence structure
+#' # (in this example tests 1 is independent and tests 3+4 are correlated)
+#' # and have either delay or time covariates:
+#' generate.stan.model(num_tests = 4, dependency_groups = list(c(1), c(2, 3, 4)), include_delay = TRUE)
+#' generate.stan.model(num_tests = 4, dependency_groups = list(c(1), c(2, 3, 4)), include_time = TRUE)
+#' }
+#'
+
+
 generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()
                                 ) {
 

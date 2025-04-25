@@ -4,11 +4,12 @@
 \alias{sim.test.data.time}
 \title{Simulates test data over time}
 \arguments{
-\item{sim_size}{Number of individuals to simulate test results for. Default = 1000.}
+\item{sim_size}{Number of individuals to simulate test results for at each timepoint. Default = 1000.}
 
 \item{days}{Number of days to simulate. Default = 365.}
 
-\item{test_params}{Test parameters used to simulate test results along with true prevalence. Given as a list containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(sens = 0.95, spec = 0.98, p_performed = 1)}
+\item{test_params}{Test parameters used to simulate test results along with true prevalence. Given as a list of lists containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ), for each test.
+Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8))}
 
 \item{seed}{For set.seed(). Default = 953.}
 
@@ -53,4 +54,15 @@ The growth rate (r) was calculated from the slope of the test positivity data by
 Method 1 produces the R outputs 'custom_R_estimate' and 'custom_R_estimate_true' and the growth rate outputs 'custom_growth_rate_estimate' and 'custom_growth_rate_estimate_true'.
 Method 2: Uses the EpiEstim package with method = "non_parametric_si". The si distribution is based on the mean generation interval 1/gamma.
 Method 2 produces the R outputs 'epi_R_estimate' and 'epi_R_estimate_true' as returned from EpiEstim::estimate_R().
+}
+\examples{
+if (interactive()) {
+sim_data <- sim.test.data.time(sim_size = 10, days=365,
+test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)))
+
+#head(sim_data$test_results)
+}
 }

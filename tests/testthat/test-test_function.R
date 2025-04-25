@@ -51,7 +51,7 @@ test_that("LC model runs with sim data with delay (no dependence)", {
   iter=500
   chains=2
   warmup=200
-  data_ID = "sim"
+  data_ID = "sim_delay"
 
   sim_results <- sim.test.data(disease_prev = 0.2, sim_size = 1000, test_params = test_params, delay = TRUE)
 

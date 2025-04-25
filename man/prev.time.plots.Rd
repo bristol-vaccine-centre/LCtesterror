@@ -22,3 +22,14 @@ Stan model fit and various summary outputs:
 Plots inferred weekly prevalence from run.LC.model with covariates = c("Time"). If sim.test.data.time() was used to simulate true prevalence and test results,
 this function output can be provided to the sim_time_data argument to compare inferred prev with true prevalence.
 }
+\examples{
+if (interactive()) {
+# Example with simulated data
+# (In this example the model will not converge
+# and CI's will be very wide because of small amount of simulated data)
+sim_data <- sim.test.data.time(sim_size=10)
+fit <- run.LC.model(sim_data$test_results, num_tests = 4, covariates = c("time"))
+plots <- prev.time.plots(fit, sim_time_data = sim_data)
+plots$weekly_prev_plot
+ }
+}

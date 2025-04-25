@@ -4,11 +4,12 @@
 \alias{sim.test.data}
 \title{Simulates test data based on true prevalence, sensitivity and specificity.}
 \arguments{
-\item{disease_prev}{True population disease prevalence to simulate (between 0-1).}
+\item{disease_prev}{True population disease prevalence to simulate (between 0-1). Default = 0.2.}
 
 \item{sim_size}{Number of individuals to simulate test results for. Default = 1000.}
 
-\item{test_params}{Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))}
+\item{test_params}{Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ).
+Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),}
 
 \item{seed}{for set.seed(). Default = 953.}
 
@@ -30,4 +31,24 @@ If delay = TRUE, additional delay columns are included specifying the delay for 
 Simulates test data for individuals based on true prevalence, and test sensitivity and specificity.
 Can simulate multiple test results for each individual with different test sens/spec parameters and different probabilities that each test is performed.
 The simulated data does not take into account dependencies between tests.
+}
+\examples{
+if (interactive()) {
+sim_data <- sim.test.data(disease_prev = 0.2, sim_size = 100,
+test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)))
+
+#head(sim_data$test_results)
+
+# Example with 'delay until test' simulated
+sim_data <- sim.test.data(disease_prev = 0.2, sim_size = 100,
+test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
+delay = TRUE)
+}
+
 }

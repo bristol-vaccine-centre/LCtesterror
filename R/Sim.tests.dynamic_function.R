@@ -4,9 +4,10 @@
 #' Can simulate multiple test results for each individual with different test sens/spec parameters and different probabilities that each test is performed.
 #' The simulated data does not take into account dependencies between tests.
 #'
-#' @param disease_prev True population disease prevalence to simulate (between 0-1).
+#' @param disease_prev True population disease prevalence to simulate (between 0-1). Default = 0.2.
 #' @param sim_size Number of individuals to simulate test results for. Default = 1000.
-#' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ). example: list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
+#' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ).
+#' Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
 #' @param seed for set.seed(). Default = 953.
 #' @param delay Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.
 #' @param delay_distribution Optional specified distribution of delay effect. A function that takes an integer `n` and returns a vector of length `n` representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).
@@ -25,7 +26,26 @@
 #' @importFrom utils globalVariables
 #' @importFrom tidyselect starts_with
 #' @name sim.test.data
+#' @examples
+#' if (interactive()) {
+#' sim_data <- sim.test.data(disease_prev = 0.2, sim_size = 100,
+#' test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+#' test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)))
 #'
+#' #head(sim_data$test_results)
+#'
+#' # Example with 'delay until test' simulated
+#' sim_data <- sim.test.data(disease_prev = 0.2, sim_size = 100,
+#' test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+#' test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8),
+#' test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
+#' delay = TRUE)
+#' }
+#'
+
 
 utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
@@ -39,7 +59,10 @@ default_delay_effect <- function(delay_day, sens) {
 }
 
 
-sim.test.data <- function(disease_prev, sim_size = 1000, test_params, seed = 953,
+sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
+                          test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
+                                             test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
+                          seed = 953,
                           delay = FALSE, delay_distribution = default_delay_distribution,
                           delay_effect_fn = default_delay_effect
                           ) {
