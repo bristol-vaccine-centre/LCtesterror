@@ -39,13 +39,18 @@ Example:
 
 ```{r example, eval = interactive(), message=FALSE, warning=FALSE}
 library(LCtesterror)
+
  # Example (no test dependence, delay, or time included)
+
  # Simulate data
- sim_data <- sim.test.data(sim_size = 3000)
+ sim_data <- sim.test.data(sim_size = 2000)
+ 
  # Simulated input parameters
- print(sim_data$test_parameters)
+ sim_data$test_parameters
+ # Simulated true prevalence = 21.4%
+ 
  # Simulated test data
- print(head(sim_data$test_parameters))
+ head(sim_data$test_results)
 
 # Run LC model using simulated test results to correct prevalence for test error
  fit <- run.LC.model(sim_data$test_results, num_tests = 4,
@@ -53,10 +58,18 @@ library(LCtesterror)
                       dependency_groups = NULL, covariates = NULL,
                       iter=1000, chains=2, warmup=500)
 
- # View estimated prevalence, sens and spec, and traceplots
- print(fit$prev_mean)
- print(fit$median_sens_spec_table)
- print(fit$traceplots)
+ # View model outputs
+ 
+ # Estimated prevalence
+ fit$prev_mean
+ # The model correctly infers the simulated true prevalence
+ 
+ # Estimated test sensitivity and specificity 
+ fit$median_sens
+ fit$median_spec
+ 
+ # Stan model traceplots
+ fit$traceplots
  
 ```
 
