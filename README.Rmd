@@ -37,9 +37,22 @@ If adding plots need to commit and push resulting figure files, so they display 
 
 Example:
 
-```{r example}
+```{r example, r eval = interactive()}
 library(LCtesterror)
-## basic example code
+ # Example (no test dependence, delay, or time included)
+ # Simulate data
+ sim_data <- sim.test.data(sim_size = 100)
+
+# Run LC model using simulated test results to correct prevalence for test error
+ fit <- run.LC.model(sim_data$test_results, num_tests = 4,
+                       data_ID = "sim", model_name = "basic_sim",
+                      dependency_groups = NULL, covariates = NULL,
+                      iter=1000, chains=1, warmup=500)
+
+ # View estimated prevalence, sens and spec, and traceplots
+ fit$prev_mean
+ fit$median_sens_spec_table
+ fit$traceplots
 ```
 
 
