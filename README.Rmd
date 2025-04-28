@@ -37,7 +37,7 @@ If adding plots need to commit and push resulting figure files, so they display 
 
 Example:
 
-```{r example, eval = interactive()}
+```{r example, eval = interactive(), message=FALSE, warning=FALSE}
 library(LCtesterror)
  # Example (no test dependence, delay, or time included)
  # Simulate data

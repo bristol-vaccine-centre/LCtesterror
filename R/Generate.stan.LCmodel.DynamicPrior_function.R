@@ -44,9 +44,9 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
   num_valid_groups <- length(valid_groups)
   G <- num_valid_groups
-  print(paste("valid_groups:", paste(valid_groups, collapse=", ")))
-  print(paste("num_valid_groups:", paste(num_valid_groups, collapse=", ")))
-  print(paste("G:", paste(G, collapse=", ")))
+  message(paste("valid_groups:", paste(valid_groups, collapse=", ")))
+  message(paste("num_valid_groups:", paste(num_valid_groups, collapse=", ")))
+  message(paste("G:", paste(G, collapse=", ")))
   #b_pos/b_neg index vector
   b_index <- rep(0, num_tests)  # Default 0 (no bpos)
   group_counter <- 1
@@ -56,19 +56,19 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     }
     group_counter <- group_counter + 1
   }
-  print(paste("b_index:", paste(b_index, collapse=", ")))
+  message(paste("b_index:", paste(b_index, collapse=", ")))
   # Determine if dependency terms (bpos/bneg) should be added
   all_tests_separate <- length(dependency_groups) == num_tests && all(sapply(dependency_groups, length) == 1) #are all tests in seperate groups? If so add dependency will = FALSE
   add_dependency <- !(num_valid_groups == 0 ||
                         (length(dependency_groups) == 1 && length(dependency_groups[[1]]) == num_tests) ||
                         all_tests_separate)
-  print(paste("add_dependency:", paste(add_dependency, collapse=", ")))
+  message(paste("add_dependency:", paste(add_dependency, collapse=", ")))
   # Create a vector: 1 if test has a valid dependency group, 0 otherwise
   dependency_group_existence <- rep(0, num_tests)
   for (group in valid_groups) {
     dependency_group_existence[group] <- 1
   }
-  print(paste(" dependency_group_existence:", paste( dependency_group_existence, collapse=", ")))
+  message(paste(" dependency_group_existence:", paste( dependency_group_existence, collapse=", ")))
 
   T <- as.numeric(num_tests)
 

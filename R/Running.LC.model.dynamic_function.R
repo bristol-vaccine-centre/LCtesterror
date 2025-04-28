@@ -128,7 +128,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     Individuals <- c(1:(nrow(data)))
     data_long <- cbind(Individuals, data)
     test_names <- as.character(seq_len(num_tests))
-    print(paste("test_names:", paste(test_names, collapse=", ")))
+    message(paste("test_names:", paste(test_names, collapse=", ")))
 
     if (!is.null(covariates)) {
       col_names <- c("N", test_names, covariates)  # Include covariate names if present
@@ -145,44 +145,44 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       col_names <- c("N", test_names, delay_names)
     }
 
-    print(paste("col_names_data:", paste(colnames(data_long), collapse=", ")))
-    print(paste("col_names_defined:", paste(col_names, collapse=", ")))
+    message(paste("col_names_data:", paste(colnames(data_long), collapse=", ")))
+    message(paste("col_names_defined:", paste(col_names, collapse=", ")))
     colnames(data_long) <- col_names
-    print(paste("col_names:", paste(colnames(data_long), collapse=", ")))
+    message(paste("col_names:", paste(colnames(data_long), collapse=", ")))
 
     numeric_cols <- grep("^[0-9]+$", colnames(data_long), value = TRUE)
-    print(paste("numeric_cols:", paste(numeric_cols, collapse=", ")))
+    message(paste("numeric_cols:", paste(numeric_cols, collapse=", ")))
 
     test_result_data_long <- data_long %>%
       pivot_longer(cols = all_of(numeric_cols), names_to = "T", values_to = "y")
-    print("test_result_data_long:")
-    print(test_result_data_long)
+    message("test_result_data_long:")
+    message(test_result_data_long)
 
     if ("delay" %in% tolower(covariates)) {
 
       test_result_data_long <- test_result_data_long %>%
         dplyr::select(-starts_with("delay"))
-      print("test_result_data_long (after removing delay columns):")
-      print(test_result_data_long)
+      message("test_result_data_long (after removing delay columns):")
+      message(test_result_data_long)
 
       delay_data_long <- data_long %>%
         pivot_longer(cols = all_of(starts_with("delay")), names_to = "T_delay", values_to = "delay") %>%
         dplyr::select(delay)
-      print("delay_data_long:")
-      print(delay_data_long)
+      message("delay_data_long:")
+      message(delay_data_long)
 
       test_data_long <- cbind(test_result_data_long, delay_data_long)
-      print("test_data_long (after merging delay data):")
-      print(test_data_long)
+      message("test_data_long (after merging delay data):")
+      message(test_data_long)
 
     } else { test_data_long <- test_result_data_long
-    print("test_data_long (no delay data):")
-    print(test_data_long)  }
+    message("test_data_long (no delay data):")
+    message(test_data_long)  }
 
 
     test_data_long <- na.omit(test_data_long)
-    print("test_data_long (after removing NAs):")
-    print(test_data_long)
+    message("test_data_long (after removing NAs):")
+    message(test_data_long)
 
     tt <- as.numeric(test_data_long$T)
     nn <- as.numeric(test_data_long$N)
@@ -241,7 +241,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
           dplyr::select(-N) %>%
           as.matrix()
         d <- apply(d_NA, 2, function(col) replace(col, is.na(col), round(median(col, na.rm = TRUE))))
-        print(d)
+        message(d)
       }
     }
 
@@ -323,7 +323,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     }
 
     stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups)
-    print(stan_code)
+    message(stan_code)
     # Compile the Stan model from the generated code
     stan_model_compiled <- rstan::stan_model(model_code = stan_code)
 
