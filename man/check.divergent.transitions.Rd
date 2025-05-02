@@ -2,20 +2,22 @@
 % Please edit documentation in R/Divergent.transitions_function.R
 \name{check.divergent.transitions}
 \alias{check.divergent.transitions}
-\title{Counts the number of divergent transitions in a fitted stan model.}
+\title{Identifies divergent transitions and low bulk ESS in a fitted stan model.}
 \usage{
-check.divergent.transitions(fit, model_name = NULL)
+check.divergent.transitions(fit, model_name = NA_character_)
 }
 \arguments{
 \item{fit}{Stan model fit object.}
 
-\item{model_name}{Optional model name identifier.}
+\item{model_name}{Optional model name identifier. Default = NA.}
 }
 \value{
-Specified model name with the number of divergent transitions
+Dataframe with the specified model name, the number of divergent transitions, and logical indicating if bulk ESS is too low for prev/sens/spec parameters.
 }
 \description{
-Counts the number of divergent transitions in a fitted stan model.
+Counts the number of divergent transitions in a fitted stan model and specifies whether the bulk Effective Sample Size (ESS) is too low
+for prev/sens/spec parameters.The function focuses only on these top-level population parameters. Individual-level parameters (such as random effects) are ignored
+when checking for low ESS. Low ESS is based on a threshold of 100 x number of chains.
 }
 \examples{
 if (interactive()) {
