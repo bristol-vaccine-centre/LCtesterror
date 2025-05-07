@@ -4,7 +4,7 @@
 \alias{sim.result.plot}
 \title{Plots LC model simulation results.}
 \arguments{
-\item{sim_stan_results}{Dataframe output from run.sims.LC()$stan_results_df.}
+\item{sim_stan_results}{Named output from run.sims.LC().}
 }
 \value{
 Plots of inferred parameters against simulated parameters. Returns 3 plots:
@@ -24,14 +24,14 @@ so if multiple p_performed were simulated in run.sims.LC(), these will need to b
 if (interactive()) {
 sim_results <- run.sims.LC(num_tests = 4,
                        prev_vec = c(0.1, 0.2),
-                       spec_vec = c(1),
+                       spec_vec = c(1, 0.98),
                        sens_vec = c(1),
                        p_performed_vec= c(1),
                        sim_size = 100,
                        chains = 2,
                        data_ID = "sims")
 
-sim.result.plots(sim_results$stan_results_df)
+sim.result.plots(sim_results)
 }
 
 }
