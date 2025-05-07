@@ -78,12 +78,6 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
 
   set.seed(set.seed)
 
-  # Empty result data frame
-  # sim_stan_result_df <- data.frame(sim_sens = numeric(0), sim_spec = numeric(0), sim_prev = numeric(0), sim_prob = numeric(0),
-  #                                  stan_sens = numeric(0), stan_sens_CI_low = numeric(0), stan_sens_CI_high = numeric(0),
-  #                                  stan_spec = numeric(0), stan_spec_CI_low = numeric(0), stan_spec_CI_high = numeric(0),
-  #                                  stan_prev = numeric(0), stan_prev_CI_low = numeric(0), stan_prev_CI_high = numeric(0))
-
   sim_stan_result_df_ALL <- data.frame()
   sim_inputs_df_ALL <- data.frame()
   divergence_summary_df <- data.frame()
@@ -176,7 +170,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
         #Stan
         sim_stan_result_df_ALL <- rbind(sim_stan_result_df_ALL, sim_stan_result_df)
         #pivot longer results for each test
-        sim_stan_result_df_long <- sim_stan_result_df_ALL %>%
+        sim_stan_result_df_ALL_long <- sim_stan_result_df_ALL %>%
           pivot_longer(
             cols = matches("^stan_(sens|spec)_test\\d+_.*"),
             names_to = c("metric", "test_id", "stat"),
@@ -189,7 +183,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
           ) %>%
           mutate(test_id = as.factor(test_id)) %>%
           select(sim_sens, sim_spec, sim_prev, sim_prob, test_id, everything())
-        sim_stan_result_df_long$model_id <- result_name
+        sim_stan_result_df_ALL_long$model_id <- result_name
         #Sim
         sim_data$test_parameters$model_id <- result_name #model ID
         sim_inputs_df_ALL <- rbind(sim_inputs_df_ALL, sim_data$test_parameters)
@@ -202,7 +196,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
                            "sim_size", "iter", "chains", "warmup", "s", "c", "p", "r",
                            "data_ID", "prior_spec", "prior_sens", "set.seed", "stan_arg",
                            "prior_spec", "prior_sens",
-                           "sim_inputs_df_ALL", "sim_stan_result_df_ALL", "divergence_summary_df")
+                           "sim_inputs_df_ALL", "sim_stan_result_df_ALL", "sim_stan_result_df_ALL_long", "divergence_summary_df")
         rm(list = setdiff(ls(), required_vars))
         gc()
 
@@ -215,7 +209,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
   sim_stan_model_output <- list(sim_inputs = NULL, stan_results_df = NULL)
 
   sim_stan_model_output$sim_inputs <- sim_inputs_df_ALL
-  sim_stan_model_output$stan_results_df <- sim_stan_result_df_ALL
+  sim_stan_model_output$stan_results_df <- sim_stan_result_df_ALL_long
   sim_stan_model_output$divergence_summary <- divergence_summary_df
 
   return(sim_stan_model_output)

@@ -87,8 +87,7 @@ test_that("LC model simulation runs", {
 
   # Calculate expected number of parameter combinations
   n_param_combos <- length(prev_vec) * length(spec_vec) * length(sens_vec) * length(p_performed_vec)
-  # Expect number of rows in sim_inputs to equal num_tests * param_combos
+  # Expect number of rows equal num_tests * param_combos
   expect_equal(nrow(results$sim_inputs), num_tests * n_param_combos)
-  # Expect one row per param combo in stan_results_df
-  expect_equal(nrow(results$stan_results_df), n_param_combos)
+  expect_equal(nrow(results$stan_results_df), num_tests * n_param_combos)
 })
