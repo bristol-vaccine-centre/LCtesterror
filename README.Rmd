@@ -31,13 +31,16 @@ pak::pak("bristol-vaccine-centre/LCtesterror")
 ```
 <!-- Need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. 
 If adding plots need to commit and push resulting figure files, so they display on GitHub and CRAN.
+Knits using installed version of LCtesterror.
+Example eval = FALSE because takes a while to run. Changed to TRUE for manual knit.
 -->
 
 ## Example
 
 Example:
 
-```{r example, eval = interactive(), message=FALSE, warning=FALSE}
+```{r example, eval = TRUE, message=FALSE, warning=FALSE}
+
 library(LCtesterror)
 
  # Example (no test dependence, delay, or time included)
@@ -47,7 +50,7 @@ library(LCtesterror)
  
  # Simulated input parameters
  sim_data$test_parameters
- # Simulated true prevalence = 21.4%
+ # Simulated true prevalence = 20%
  
  # Simulated test data
  head(sim_data$test_results)
@@ -56,10 +59,10 @@ library(LCtesterror)
  fit <- run.LC.model(sim_data$test_results, num_tests = 4,
                        data_ID = "sim", model_name = "basic_sim",
                       dependency_groups = NULL, covariates = NULL,
-                      iter=2000, chains=4, warmup=1000)
+                      iter=2000, chains=4, warmup=1000, plot_chains = FALSE)
 
- # View model outputs
  
+ # View model outputs
  # Estimated prevalence
  fit$prev_mean
  # The model correctly infers the simulated true prevalence
