@@ -255,7 +255,6 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       test_to_group[dependency_groups[[g]]] <- g  # Assign group number
     }
 
-    #G <- as.numeric(length(unique(test_to_group)))
 
     # Identify valid dependency groups (ignoring single-test groups)
     valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
@@ -324,10 +323,10 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
 
     stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups)
     message(stan_code)
-    # Compile the Stan model from the generated code
+    # Compile Stan model from generated code
     stan_model_compiled <- rstan::stan_model(model_code = stan_code)
 
-    # Use parallel processing for chains
+    # parallel processing for chains
     rstan_options(auto_write = TRUE)
     options(mc.cores = parallel::detectCores())
 
@@ -341,8 +340,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                          !!!stan_arg)  # Pass additional arguments using bang bang bang to unpack list
 
     #model outputs
-    #
-    # #Model summary df
+
+    # Model summary df
     fit_summary <- rstan::summary(stan_fit)
     stan_fit_summary <- fit_summary$summary #summary for all chains merged. #se_mean = monte carlo standard errors (from MCMC)
     stan_fit_summary_df <- as.data.frame(stan_fit_summary )
@@ -418,20 +417,18 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       # Extract rows for sensitivity and specificity
       sens_rows <- grepl("^Se_median", rownames(summary_df))
       spec_rows <- grepl("^Sp_median", rownames(summary_df))
-      # Subset data
       sens_df <- summary_df[sens_rows, ]
       spec_df <- summary_df[spec_rows, ]
       # Assign row names based on test order
       rownames(sens_df) <- test_names
       rownames(spec_df) <- test_names
-      # Format sensitivity and specificity
+      # Formatting
       sens_table <- sens_df %>%
         dplyr::mutate(Sensitivity = sprintf("%.3f (%.3f - %.3f)", mean, `2.5%`, `97.5%`)) %>%
         dplyr::select(Sensitivity)
       spec_table <- spec_df %>%
         dplyr::mutate(Specificity = sprintf("%.3f (%.3f - %.3f)", mean, `2.5%`, `97.5%`)) %>%
         dplyr::select(Specificity)
-      # Combine into one table
       combined_table <- cbind(sens_table, spec_table)
 
       # Extract model info
@@ -560,7 +557,6 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     message("! Error in `run.LC.model()`: ", e$message)
     return(list(
       stan_fit = NULL,
-      #data_inputs = stan_data,
       message = paste("Error in run.LC.model:", e$message)
     ))
   })

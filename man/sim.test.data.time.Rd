@@ -27,7 +27,17 @@ Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = 
 
 \item{init}{Initial state of the SIR model as a list. Default = init = list(init_S = 0.99, init_I = 0.01, init_R = 0).}
 
-\item{params}{SIR model parameters as a list. Defaults = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001).}
+\item{params}{list of SIR parameters. Includes:
+\describe{
+\item{beta_0}{Baseline transmission rate}
+\item{desired_R0}{Desired basic reproduction number (R0) - used to calculate beta_0 if beta_0 is null.}
+\item{beta_1}{Amplitude of seasonal forcing}
+\item{phi}{Phase shift of seasonal forcing}
+\item{gamma}{Recovery rate}
+\item{omega}{Waning immunity rate}
+}
+Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001.
+If beta0 is null it is calculated as desired_R0 * gamma.}
 }
 \value{
 A list containing:

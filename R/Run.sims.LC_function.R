@@ -121,7 +121,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
         sim_stan_result_df <- data.frame()
 
         # Extract prevalence with CIs
-        prev_rows <- grepl("^prev$", rownames(fit_summary_df)) # If no generated quantities, otherwise use "^prevalence"
+        prev_rows <- grepl("^prev$", rownames(fit_summary_df))
         stan_fit_summary_prev <- subset(fit_summary_df, prev_rows)
         stan_prev <- stan_fit_summary_prev$mean
         stan_prev_CI_low <- stan_fit_summary_prev$`2.5%`
@@ -137,7 +137,6 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
         # Extract values from list name
         name_parts <- strsplit(result_name, "_")[[1]]
 
-        #empty data frame
         sim_stan_result_df <- data.frame(
           sim_sens = as.numeric(name_parts[2]),
           sim_spec = as.numeric(name_parts[4]),
@@ -145,7 +144,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
           sim_prob = as.numeric(name_parts[8])
         )
 
-        # Dynamically add columns for each test's sensitivity and specificity
+        # add columns for each test's sensitivity and specificity
         for (i in 1:num_tests) {
           test_name <- paste0("test", i)
 

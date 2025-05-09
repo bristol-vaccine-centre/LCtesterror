@@ -5,7 +5,17 @@
 #' @param years Number of years to run SIR. Default = 50.
 #' @param N Population size. Default = 1.
 #' @param init List of initial state values. Default = init_S = 0.99; init_I = 0.01; init_R = 0.
-#' @param params list of SIR paramters. Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001. If beta0 is null it is calculated based on desired_R0.
+#' @param params list of SIR parameters. Includes:
+#' \describe{
+#'   \item{beta_0}{Baseline transmission rate}
+#'   \item{desired_R0}{Desired basic reproduction number (R0) - used to calculate beta_0 if beta_0 is null.}
+#'   \item{beta_1}{Amplitude of seasonal forcing}
+#'   \item{phi}{Phase shift of seasonal forcing}
+#'   \item{gamma}{Recovery rate}
+#'   \item{omega}{Waning immunity rate}
+#' }
+#' Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001.
+#' If beta0 is null it is calculated as desired_R0 * gamma.
 #' @return A dataframe of SIR model results at each timepoint.
 #' Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 #' @export
@@ -81,11 +91,11 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
     I <- state[2]
     R <- state[3]
 
-    # Seasonal transmission rate function with time t as the input
+    # beta_t with seasonal forcing
     beta_t <- parameters["beta0"] + parameters["beta1"] * cos(2 * pi * t / 365 - parameters["phi"])
 
-    # Differential equations with waning immunity term (omega)
-    dS <- -beta_t * S * I + parameters["omega"] * R  # Susceptibles are replenished by waning immunity
+    # Differential equations
+    dS <- -beta_t * S * I + parameters["omega"] * R  # Susceptibles replenished by waning immunity
     dI <- beta_t * S * I - parameters["gamma"] * I
     dR <- parameters["gamma"] * I - parameters["omega"] * R  # Loss of immunity sends some recovered back to susceptible
 
@@ -101,20 +111,20 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
   # Time points
   years <- years
   time <- seq(0, years * 365, by = 1) #time in days
-  # Solving the ODEs using model sir.model function
+  # Solving ODEs
   output <- deSolve::ode(y = init, times = time, func = sir.model, parms = parameters)
   output <- as.data.frame(output)
 
 
   # Function to calculate beta_t
   calculate.beta_t <- function(time, parameters) {
-    # Extract parameters
+
     beta0 <- parameters["beta0"]
     beta1 <- parameters["beta1"]
     phi <- parameters["phi"]
     gamma <- parameters["gamma"]
 
-    # Calculate the time-dependent transmission rate beta(t)
+    # time-dependent transmission rate beta(t)
     beta_t <- beta0 + beta1 * cos(2 * pi * time / 365 - phi)
     #to prevent beta_t dropping below 0:
     #beta_t <- max(0, beta0 + beta1 * cos(2 * pi * time / 365 - phi))
@@ -124,16 +134,16 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 
   # Function to calculate R0(t) of SIR data
   calculate.R0.t <- function(time, parameters) {
-    # Extract parameters
+
     beta0 <- parameters["beta0"]
     beta1 <- parameters["beta1"]
     phi <- parameters["phi"]
     gamma <- parameters["gamma"]
 
-    # Calculate the time-dependent transmission rate beta(t)
+    # time-dependent transmission rate beta(t)
     beta_t <- beta0 + beta1 * cos(2 * pi * time / 365 - phi)
 
-    # Calculate R0(t) for each time point
+    # R0(t)
     R0_t <- beta_t / gamma
 
     return(R0_t)
@@ -200,7 +210,17 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' @param years Number of years to run the SIR model. Default = 50.
 #' @param N Population size used in the SIR model. Default = 1.
 #' @param init Initial state of the SIR model as a list. Default = init = list(init_S = 0.99, init_I = 0.01, init_R = 0).
-#' @param params SIR model parameters as a list. Defaults = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001).
+#' @param params list of SIR parameters. Includes:
+#' \describe{
+#'   \item{beta_0}{Baseline transmission rate}
+#'   \item{desired_R0}{Desired basic reproduction number (R0) - used to calculate beta_0 if beta_0 is null.}
+#'   \item{beta_1}{Amplitude of seasonal forcing}
+#'   \item{phi}{Phase shift of seasonal forcing}
+#'   \item{gamma}{Recovery rate}
+#'   \item{omega}{Waning immunity rate}
+#' }
+#' Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001.
+#' If beta0 is null it is calculated as desired_R0 * gamma.
 #' @return A list containing:
 #'  \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
@@ -268,10 +288,10 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
   # SIR model output
   sir_output <- run.sir.model(years=years, N=N, init=init, params=params)
 
-  # Function to extract prevalence from the final year SIR model output
+  # Function to extract prevalence from final year SIR model output
   get.sir.prevalence <- function(day_of_year, sir_output=sir_output) {
     final_year_output <- sir_output[(nrow(sir_output) - 364):nrow(sir_output), ]# Extract last year of data (the final 365 days)
-    # Wrap the day_of_year within the final year range
+    # Wrap day_of_year within final year range
     day_index <- (day_of_year %% 365) + 1  # Ensure it starts from 1
     return(final_year_output$proportion_I[day_index])
   }
@@ -288,7 +308,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     return(npv)
   }
 
-  # Generate synthetic data using the final year SIR-based prevalence
+  # simulate data using final year SIR prevalence
   synth_data <- expand.grid(
     pat_id = 1:sim_size,
     day_of_year = 1:days
@@ -315,7 +335,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
       spec = spec
     )
 
-  # Data in wide format
+  # wide format
   wide_synth_data <- synth_data %>%
     dplyr::select(pat_id, day_of_year, true_prev, true_disease, test_id, test_result, ppv, npv, sens, spec) %>%
     tidyr::pivot_wider(names_from = test_id, values_from = c(test_result, ppv, npv, sens, spec))
@@ -323,7 +343,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
   test_results <- wide_synth_data %>%
     dplyr::select(dplyr::starts_with("test_result"), day_of_year)
 
-  # Check simulation is doing the right thing using RG (for overall params):
+  # Check simulation is doing the right thing using Rogan-Gladen (for overall params):
   rogan_gladen <- function(ap, sens, spec) {
     dplyr::case_when(
       ap <= 1 - spec ~ 0,
@@ -379,6 +399,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     mutate(overall_sens = overall_sens, overall_spec = overall_spec)
 
 
+
   # Calculation of R0(t) / Re(t) from daily observed cases (no adjustment for sens/spec)
 
   my.estimate.R <- function(incidence_data, gamma, day_of_year, window_size = Est_R_window , n_samples = Est_R_n_samples) {
@@ -389,11 +410,11 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     growth_rate_df <- data.frame(day_of_year = day_of_year, growth_rate = NA, SE = NA)
 
 
-    # Loop over each time point and calculate R_t using a sliding window
+    # Loops over each time point and calculates R_t using sliding window
     for (i in seq(window_size, length(incidence_data))) {
-      # subset incidence data over window
+      # subsets incidence data over window
       cases_window <- incidence_data[(i - window_size + 1):i]
-      # calculate growth rate r as slope of log(cases) over the window
+      # calculates growth rate r as slope of log(cases) over the window
       log_cases <- log(cases_window + 1)  # (avoid log(0) by adding 1)
       lm_fit <- lm(log_cases ~ seq_along(log_cases))
 
@@ -407,16 +428,15 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
       # Draw samples for R_t from normal distribution with mean R_t and SD based on SE
       R_t_samples <- rnorm(n_samples, mean = R_t, sd = r_se / gamma)
 
-      # Store mean and SD of the sampled R_t values
+      # save mean and SD of R_t
       R_t_df$R_t_mean[i] <- mean(R_t_samples)
       R_t_df$R_t_sd[i] <- stats::sd(R_t_samples)
-
-      # Store growth rate and SE in growth_rate_df
+      # save growth rate and SE
       growth_rate_df$growth_rate[i] <- r
       growth_rate_df$SE[i] <- r_se
     }
 
-    # Assign the results to the list to return
+
     R_results$R_t_df <- R_t_df
     R_results$growth_rate_df <- growth_rate_df
 
@@ -431,7 +451,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
 
   #Calculate using EpiEstim package
 
-  # Create discrete approximation of the exponential distribution
+  # discrete approximation of exponential distribution
   gi_distribution <- sapply(0:max_t, function(t) {
     stats::pexp(t + 1, rate = 1 / mean_gi) - stats::pexp(t, rate = 1 / mean_gi)
   })

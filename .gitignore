@@ -1,8 +1,17 @@
 .Rproj.user
 inst/doc
+.Renviron
 .Rhistory
+.RData
 renv/library/
 renv/staging/
 /doc/
 /Meta/
 README.html
+.env
+*.pem
+*.key
+*.crt
+*.rds
+config/secrets.yml
+config.yml

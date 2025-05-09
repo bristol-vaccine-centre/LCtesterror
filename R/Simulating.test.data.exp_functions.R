@@ -50,7 +50,7 @@ run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma =
     r_t <- beta_t - gamma
     # Calculate prevalence at time t[i] using exponential growth
     I_t[i] <- I_t[i - 1] * exp(r_t)
-    # Cap prevalence at 1 if it exceeds 1
+    # Cap prevalence at 1
     if (I_t[i] > 1) {
       I_t[i] <- 1
     }
@@ -163,7 +163,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
     return(npv)
   }
 
-  # Generate synthetic data using the final year exponential growth-based prevalence
+  # Simulate data using exponential model prevalence
   synth_data <- expand.grid(
     pat_id = 1:sim_size,
     day_of_year = 1:days
@@ -190,7 +190,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
       spec = spec
     )
 
-  # Data in wide format
+  # wide format
   wide_synth_data <- synth_data %>%
     dplyr::select(pat_id, day_of_year, true_prev, true_disease, test_id, test_result, ppv, npv, sens, spec) %>%
     tidyr::pivot_wider(names_from = test_id, values_from = c(test_result, ppv, npv, sens, spec))
@@ -198,7 +198,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
   test_results <- wide_synth_data %>%
     dplyr::select(dplyr::starts_with("test_result"), day_of_year)
 
-  # Check simulation is doing the right thing using RG (for overall params):
+  # Check simulation is doing the right thing using Rogan-Gladen (for overall params):
   rogan_gladen <- function(ap, sens, spec) {
     dplyr::case_when(
       ap <= 1 - spec ~ 0,
@@ -264,11 +264,11 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
     growth_rate_df <- data.frame(day_of_year = day_of_year, growth_rate = NA, SE = NA)
 
 
-    # Loop over each time point and calculate R_t using a sliding window
+    # Loops over each time point and calculates R_t using a sliding window
     for (i in seq(window_size, length(incidence_data))) {
-      # subset incidence data over window
+      # subsets incidence data over window
       cases_window <- incidence_data[(i - window_size + 1):i]
-      # calculate growth rate r as slope of log(cases) over the window
+      # calculates growth rate r as slope of log(cases) over the window
       log_cases <- log(cases_window + 1)  # (avoid log(0) by adding 1)
       lm_fit <- lm(log_cases ~ seq_along(log_cases))
 
@@ -282,16 +282,15 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
       # Draw samples for R_t from normal distribution with mean R_t and SD based on SE
       R_t_samples <- rnorm(n_samples, mean = R_t, sd = r_se / gamma)
 
-      # Store mean and SD of the sampled R_t values
+      # save mean and SD of R_t
       R_t_df$R_t_mean[i] <- mean(R_t_samples)
       R_t_df$R_t_sd[i] <- stats::sd(R_t_samples)
-
-      # Store growth rate and SE in growth_rate_df
+      # saves growth rate and SE
       growth_rate_df$growth_rate[i] <- r
       growth_rate_df$SE[i] <- r_se
     }
 
-    # Assign the results to the list to return
+
     R_results$R_t_df <- R_t_df
     R_results$growth_rate_df <- growth_rate_df
 
@@ -306,7 +305,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
 
   #Calculate using EpiEstim package
 
-  # Create discrete approximation of the exponential distribution
+  # discrete approximation of exponential distribution
   gi_distribution <- sapply(0:max_t, function(t) {
     stats::pexp(t + 1, rate = 1 / mean_gi) - stats::pexp(t, rate = 1 / mean_gi)
   })

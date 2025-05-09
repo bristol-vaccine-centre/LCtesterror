@@ -133,7 +133,7 @@ test_result_cols <- setdiff(names(wide_synth_data1), c("pat_id", "true_prev", gr
     dplyr::filter(rowSums(!is.na(dplyr::across(all_of(test_result_cols)))) > 0) %>% #remove individuals with no test results
     dplyr::select(-pat_id, -true_prev)
 
-  # Check simulation is doing the right thing using RG:
+  # Check simulation is doing the right thing using Rogan-Gladen:
   rogan_gladen <- function(ap, sens, spec) {
     dplyr::case_when(
       ap <= 1 - spec ~ 0,

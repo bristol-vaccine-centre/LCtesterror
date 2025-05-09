@@ -37,7 +37,8 @@
 
 utils::globalVariables(c("Simulated_prev", "Simulated_sens", "Simulated_spec", "stan_prev", "stan_prev_CI_low",
                          "stan_prev_CI_high", "sens_median", "Test_ID", "sens_median_CI_low", "sens_median_CI_high",
-                         "spec_median", "spec_median_CI_low", "spec_median_CI_high"))
+                         "spec_median", "spec_median_CI_low", "spec_median_CI_high", "overall_test_positivity_sim",
+                         "Simulated_overall_test_positivity", "CI_lower", "CI_upper"))
 
 sim.result.plot <- function(sim_stan_results) {
 
