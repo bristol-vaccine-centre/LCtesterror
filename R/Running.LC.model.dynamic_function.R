@@ -22,7 +22,7 @@
 #' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors.
 #' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.
 #' @param model_name Optional name of model. Default = NULL.
-#' @param separate_chains For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.
+#' @param plot_chains For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.
 #' @return Stan model fit and various summary outputs:
 #'   \describe{
 #'   \item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
@@ -121,7 +121,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                          prior_delay = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, prior_list = NULL, n_samples=iter,
-                         model_name=NULL, separate_chains=TRUE) {
+                         model_name=NULL, plot_chains=TRUE) {
 
   # Use tryCatch to handle errors inside the function
   result <- tryCatch({
@@ -458,7 +458,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                                        model_name = model_name)
 
     #Traceplots
-    plot.stan.mod <- function(stan_mod) {
+    plot.stan.mod <- function(stan_mod, separate_chains = plot_chains) {
       plots <- list()
       available_params <- names(rstan::extract(stan_mod))
       #log posterior (`lp__`)

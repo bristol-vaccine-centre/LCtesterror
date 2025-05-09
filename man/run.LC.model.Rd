@@ -38,7 +38,7 @@ Example for scenario where tests 1+2 are dependent on each other and where tests
 
 \item{model_name}{Optional name of model. Default = NULL.}
 
-\item{separate_chains}{For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.}
+\item{plot_chains}{For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.}
 }
 \value{
 Stan model fit and various summary outputs:
