@@ -43,7 +43,7 @@ library(LCtesterror)
  # Example (no test dependence, delay, or time included)
 
  # Simulate data
- sim_data <- sim.test.data(sim_size = 2000)
+ sim_data <- sim.test.data(sim_size = 5000)
  
  # Simulated input parameters
  sim_data$test_parameters
@@ -56,7 +56,7 @@ library(LCtesterror)
  fit <- run.LC.model(sim_data$test_results, num_tests = 4,
                        data_ID = "sim", model_name = "basic_sim",
                       dependency_groups = NULL, covariates = NULL,
-                      iter=1000, chains=2, warmup=500)
+                      iter=2000, chains=4, warmup=1000)
 
  # View model outputs
  
