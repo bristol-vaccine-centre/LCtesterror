@@ -37,6 +37,8 @@ Example for scenario where tests 1+2 are dependent on each other and where tests
 \item{n_samples}{If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.}
 
 \item{model_name}{Optional name of model. Default = NULL.}
+
+\item{separate_chains}{For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.}
 }
 \value{
 Stan model fit and various summary outputs:
@@ -51,7 +53,7 @@ Stan model fit and various summary outputs:
 \item{median_sens}{Median inferred sensitivity for each test with 95\% credible intervals.}
 \item{median_spec}{Median inferred specificity for each test with 95\% credible intervals.}
 \item{median_sens_spec_table}{A formatted table summarising each test's inferred sensitivity and specificity with 95\% credible intervals .}
-\item{traceplots}{Plots traceplots of log posterior, prevalence, sensitivity and specifcity.}
+\item{traceplots}{Plots traceplots of log posterior, and posterior density plots for prevalence, sensitivity and specifcity parameters.}
 \item{pairs.plot_function}{A function to plot a pairs plot for prev, sens and spec parameters.}
 \item{mean_Rhat}{The mean R-hat value across parameters.}
 \item{mean_ESS}{The mean effective sample size (ESS) across parameters.}

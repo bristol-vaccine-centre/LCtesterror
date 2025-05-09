@@ -22,6 +22,7 @@
 #' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors.
 #' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.
 #' @param model_name Optional name of model. Default = NULL.
+#' @param separate_chains For plotting parameter posteriors using rstan::stan_dens, should the density for each chain be plotted? FALSE = for each parameter the draws from all chains are combined. Default = TRUE.
 #' @return Stan model fit and various summary outputs:
 #'   \describe{
 #'   \item{stan_fit}{Fitted stan LC model as returned from rstan::sampling.}
@@ -34,7 +35,7 @@
 #'   \item{median_sens}{Median inferred sensitivity for each test with 95% credible intervals.}
 #'   \item{median_spec}{Median inferred specificity for each test with 95% credible intervals.}
 #'   \item{median_sens_spec_table}{A formatted table summarising each test's inferred sensitivity and specificity with 95% credible intervals .}
-#'   \item{traceplots}{Plots traceplots of log posterior, prevalence, sensitivity and specifcity.}
+#'   \item{traceplots}{Plots traceplots of log posterior, and posterior density plots for prevalence, sensitivity and specifcity parameters.}
 #'   \item{pairs.plot_function}{A function to plot a pairs plot for prev, sens and spec parameters.}
 #'   \item{mean_Rhat}{The mean R-hat value across parameters.}
 #'   \item{mean_ESS}{The mean effective sample size (ESS) across parameters.}
@@ -120,7 +121,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                          prior_delay = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, prior_list = NULL, n_samples=iter,
-                         model_name=NULL) {
+                         model_name=NULL, separate_chains=TRUE) {
 
   # Use tryCatch to handle errors inside the function
   result <- tryCatch({
@@ -462,19 +463,19 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       available_params <- names(rstan::extract(stan_mod))
       #log posterior (`lp__`)
       if ("lp__" %in% available_params) {
-        plots$traceplot_lp_warmup <- traceplot(stan_mod, pars = "lp__", inc_warmup = TRUE)
-        plots$traceplot_lp <- traceplot(stan_mod, pars = "lp__")
+        plots$traceplot_lp_warmup <- rstan::traceplot(stan_mod, pars = "lp__", inc_warmup = TRUE)
+        plots$traceplot_lp <- rstan::traceplot(stan_mod, pars = "lp__")
       }
       # Check if "prev" exists before plotting
       if ("prev" %in% available_params) {
-        plots$stan_dens_prev <- stan_dens(stan_mod, pars = "prev", separate_chains = TRUE)
+        plots$stan_dens_prev <- rstan::stan_dens(stan_mod, pars = "prev", separate_chains = separate_chains)
       }
       # other parameters to check and plot
       params_to_plot <- c("Se_mean", "Sp_mean", "Se_median", "Sp_median")
 
       for (param in params_to_plot) {
         if (param %in% available_params) {
-          plots[[paste0("stan_dens_", param)]] <- stan_dens(stan_mod, pars = param, separate_chains = TRUE)
+          plots[[paste0("stan_dens_", param)]] <- rstan::stan_dens(stan_mod, pars = param, separate_chains = separate_chains)
         }
       }
       return(plots)
