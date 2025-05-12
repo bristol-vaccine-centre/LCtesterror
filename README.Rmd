@@ -39,7 +39,7 @@ Example eval = FALSE because takes a while to run. Changed to TRUE for manual kn
 
 Example:
 
-```{r example, eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE, error = FALSE}
+```{r example, eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE, error = FALSE}
 
 library(LCtesterror)
 
