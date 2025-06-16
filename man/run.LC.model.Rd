@@ -30,7 +30,7 @@ Example for scenario where tests 1+2 are dependent on each other and where tests
 
 \item{stan_arg}{Optional extra arguments to pass to the rstan::sampling function. Default = NULL.}
 
-\item{covariates}{Optional covariate to include in the model. Either "Time" or "Delay". If specified, relevant individual-level data must be provided in data. Default = NULL.}
+\item{covariates}{Optional vector of covariates to include in the model. Either c("Time") or c("Delay"). If specified, relevant individual-level data must be provided in data. Default = NULL.}
 
 \item{prior_list}{Optional list of prior distributions-specified to generate in R- to plot with posteriors.}
 

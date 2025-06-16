@@ -18,7 +18,7 @@
 #' @param chains The number of chains for the stan model. Default = 4.
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
 #' @param stan_arg Optional extra arguments to pass to the rstan::sampling function. Default = NULL.
-#' @param covariates Optional covariate to include in the model. Either "Time" or "Delay". If specified, relevant individual-level data must be provided in data. Default = NULL.
+#' @param covariates Optional vector of covariates to include in the model. Either c("Time") or c("Delay"). If specified, relevant individual-level data must be provided in data. Default = NULL.
 #' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors.
 #' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.
 #' @param model_name Optional name of model. Default = NULL.
@@ -132,7 +132,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
     message(paste("test_names:", paste(test_names, collapse=", ")))
 
     if (!is.null(covariates)) {
-      col_names <- c("N", test_names, covariates)  # Include covariate names if present
+      col_names <- c("N", test_names, tolower(covariates))  # Include covariate names if present
     } else {
       col_names <- c("N", test_names)
     }
@@ -156,34 +156,35 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
 
     test_result_data_long <- data_long %>%
       pivot_longer(cols = all_of(numeric_cols), names_to = "T", values_to = "y")
-    message("test_result_data_long:")
-    message(test_result_data_long)
+    #message("test_result_data_long:")
+    #message(test_result_data_long)
 
     if ("delay" %in% tolower(covariates)) {
 
       test_result_data_long <- test_result_data_long %>%
         dplyr::select(-starts_with("delay"))
-      message("test_result_data_long (after removing delay columns):")
-      message(test_result_data_long)
+      #message("test_result_data_long (after removing delay columns):")
+      #message(test_result_data_long)
 
       delay_data_long <- data_long %>%
         pivot_longer(cols = all_of(starts_with("delay")), names_to = "T_delay", values_to = "delay") %>%
         dplyr::select(delay)
-      message("delay_data_long:")
-      message(delay_data_long)
+      #message("delay_data_long:")
+      #message(delay_data_long)
 
       test_data_long <- cbind(test_result_data_long, delay_data_long)
-      message("test_data_long (after merging delay data):")
-      message(test_data_long)
+      #message("test_data_long (after merging delay data):")
+      #message(test_data_long)
 
     } else { test_data_long <- test_result_data_long
-    message("test_data_long (no delay data):")
-    message(test_data_long)  }
+    #message("test_data_long (no delay data):")
+    #message(test_data_long)
+    }
 
 
     test_data_long <- na.omit(test_data_long)
-    message("test_data_long (after removing NAs):")
-    message(test_data_long)
+    #message("test_data_long (after removing NAs):")
+    #message(test_data_long)
 
     tt <- as.numeric(test_data_long$T)
     nn <- as.numeric(test_data_long$N)

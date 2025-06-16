@@ -32,11 +32,11 @@ Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03,
 If beta0 is null it is calculated as desired_R0 * gamma.}
 }
 \value{
-A dataframe of SIR model results at each timepoint.
+A dataframe of SIR model results at each timepoint (in days).
 Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 }
 \description{
-Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
+Generates and solves an SIR model with seasonal forcing to model daily true prevalence over the course of a seasonal disease with a single peak.
 }
 \examples{
 if (interactive()) {

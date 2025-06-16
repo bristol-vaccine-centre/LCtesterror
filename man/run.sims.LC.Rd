@@ -33,8 +33,7 @@
 \item{set.seed}{Random seed for set.seed(). Default = 9876.}
 }
 \value{
-Stan model fit and various summary outputs:
-
+Stan model fit and various summary outputs.
 A list containing:
 \describe{
 \item{sim_inputs}{A data frame of all simulation input parameters per model run.

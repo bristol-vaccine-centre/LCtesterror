@@ -31,7 +31,7 @@ sim_results <- run.sims.LC(num_tests = 4,
                        chains = 2,
                        data_ID = "sims")
 
-sim.result.plots(sim_results)
+sim.result.plot(sim_results)
 }
 
 }

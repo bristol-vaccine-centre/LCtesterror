@@ -22,7 +22,8 @@ Imports: rstan,
  EpiEstim,
  deSolve,
  tidyselect,
- stringr
+ stringr,
+ purrr
 Suggests: 
     knitr,
     rmarkdown,

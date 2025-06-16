@@ -18,8 +18,8 @@
 #' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
 #' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
 #' @param set.seed Random seed for set.seed(). Default = 9876.
-#' @return Stan model fit and various summary outputs:
-#' @return A list containing:
+#' @return Stan model fit and various summary outputs.
+#' A list containing:
 #' \describe{
 #'   \item{sim_inputs}{A data frame of all simulation input parameters per model run.
 #'   Output from sim.test.data()$test_parameters}
