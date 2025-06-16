@@ -91,3 +91,35 @@ test_that("LC model simulation runs", {
   expect_equal(nrow(results$sim_inputs), num_tests * n_param_combos)
   expect_equal(nrow(results$stan_results_df), num_tests * n_param_combos)
 })
+
+test_that("LC model with time simulation runs", {
+
+  num_tests=4
+  iter=500
+  chains=2
+  warmup=200
+  spec_vec = c(1, 0.98)
+  sens_vec = c(1)
+  p_performed_vec= c(1)
+
+  results <- run.sims.LC.time(num_tests = num_tests,
+                              days=365,
+                         spec_vec = spec_vec,
+                         sens_vec = sens_vec,
+                         p_performed_vec= p_performed_vec,
+                         sim_size = 10, chains = chains, iter = iter, warmup=warmup, data_ID = "sims_time")
+
+  expect_false(is.null(results$sim_inputs))
+  expect_false(is.null(results$sim_data))
+  expect_false(is.null(results$stan_results_df))
+  expect_false(is.null(results$divergence_summary))
+  expect_false(is.null(results$R_estimates))
+
+  # Calculate expected number of parameter combinations
+  n_param_combos <- length(spec_vec) * length(sens_vec) * length(p_performed_vec)
+  # Expect number of rows equal num_tests * param_combos
+  expect_equal(nrow(results$sim_inputs), num_tests * n_param_combos)
+  # Expect number of rows equal num_tests * param_combos * weeks, therefore bigger than sim_inputs
+  expect_true(nrow(results$stan_results_df) > nrow(results$sim_inputs))
+  expect_true(nrow(results$sim_data) > nrow(results$sim_inputs))
+})

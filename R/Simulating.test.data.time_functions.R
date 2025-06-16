@@ -1,6 +1,6 @@
 
 #' @title Generates and solves an SIR model with seasonal forcing
-#' @description Generates and solves an SIR model with seasonal forcing to model true prevalence over the course of a seasonal disease with a single peak.
+#' @description Generates and solves an SIR model with seasonal forcing to model daily true prevalence over the course of a seasonal disease with a single peak.
 #'
 #' @param years Number of years to run SIR. Default = 50.
 #' @param N Population size. Default = 1.
@@ -16,7 +16,7 @@
 #' }
 #' Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001.
 #' If beta0 is null it is calculated as desired_R0 * gamma.
-#' @return A dataframe of SIR model results at each timepoint.
+#' @return A dataframe of SIR model results at each timepoint (in days).
 #' Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 #' @export
 #' @importFrom deSolve ode
@@ -187,9 +187,9 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 
 
 
-#' @title Simulates test data over time
-#' @description Simulates disease prevalence over time using a simple SIR model with seasonal forcing, then uses prevalence over time to simulate daily test positivity with test error.
-#' Default prevalence simulation is for one year and assumes a seasonal disease peak.
+#' @title Simulates test data over time.
+#' @description Simulates disease prevalence over time using a simple SIR model with seasonal forcing, then uses prevalence over time to simulate test positivity with test error.
+#' Default prevalence simulation is daily for one year and assumes a seasonal disease peak.
 #' Returned overall sens/spec combines individual test sens/spec parameters assuming multiple parallel testing where any test positive is assumed to be a disease positive individual.
 #' Also estimates the reproduction number from simulated prevalence data using two different methods.
 #' Method 1: As the true prevalence data and test positivity data were simulated using an SIR model, R was calculated as R = 1 + (growth rate/recovery rate).
@@ -224,7 +224,7 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' @return A list containing:
 #'  \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.}
+#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for time (default gives day of year), based on true prev, sens and spec parameters.}
 #'   \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day of the year simulated}
 #'   \item{incidence_data}{Daily test-derived and true case counts, as well as overall sensitivity and specificity (combined across all tests assuming parallel testing with any test positive assumed a disease positive).}
 #'   \item{custom_R_estimate}{Daily mean estimated R(t) based on observed (test-positive) incidence from simulated test data with test error using custom method. Contains overall sens/spec (overall across tests)}
@@ -308,10 +308,11 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     return(npv)
   }
 
+
   # simulate data using final year SIR prevalence
   synth_data <- expand.grid(
     pat_id = 1:sim_size,
-    day_of_year = 1:days
+    day_of_year = (1:days - 1) %% 365 + 1 #wraps days into day of year (so will loop to 1 if days >365)
   ) %>%
     dplyr::mutate(
       true_disease = sapply(day_of_year, function(day) {
@@ -341,7 +342,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     tidyr::pivot_wider(names_from = test_id, values_from = c(test_result, ppv, npv, sens, spec))
 
   test_results <- wide_synth_data %>%
-    dplyr::select(dplyr::starts_with("test_result"), day_of_year)
+    dplyr::select(dplyr::starts_with("test_result"), day_of_year = day_of_year)
 
   # Check simulation is doing the right thing using Rogan-Gladen (for overall params):
   rogan_gladen <- function(ap, sens, spec) {

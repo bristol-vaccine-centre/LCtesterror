@@ -2,7 +2,7 @@
 % Please edit documentation in R/Simulating.test.data.time_functions.R
 \name{sim.test.data.time}
 \alias{sim.test.data.time}
-\title{Simulates test data over time}
+\title{Simulates test data over time.}
 \arguments{
 \item{sim_size}{Number of individuals to simulate test results for at each timepoint. Default = 1000.}
 
@@ -43,7 +43,7 @@ If beta0 is null it is calculated as desired_R0 * gamma.}
 A list containing:
 \describe{
 \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-\item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.}
+\item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for time (default gives day of year), based on true prev, sens and spec parameters.}
 \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day of the year simulated}
 \item{incidence_data}{Daily test-derived and true case counts, as well as overall sensitivity and specificity (combined across all tests assuming parallel testing with any test positive assumed a disease positive).}
 \item{custom_R_estimate}{Daily mean estimated R(t) based on observed (test-positive) incidence from simulated test data with test error using custom method. Contains overall sens/spec (overall across tests)}
@@ -55,8 +55,8 @@ A list containing:
 }
 }
 \description{
-Simulates disease prevalence over time using a simple SIR model with seasonal forcing, then uses prevalence over time to simulate daily test positivity with test error.
-Default prevalence simulation is for one year and assumes a seasonal disease peak.
+Simulates disease prevalence over time using a simple SIR model with seasonal forcing, then uses prevalence over time to simulate test positivity with test error.
+Default prevalence simulation is daily for one year and assumes a seasonal disease peak.
 Returned overall sens/spec combines individual test sens/spec parameters assuming multiple parallel testing where any test positive is assumed to be a disease positive individual.
 Also estimates the reproduction number from simulated prevalence data using two different methods.
 Method 1: As the true prevalence data and test positivity data were simulated using an SIR model, R was calculated as R = 1 + (growth rate/recovery rate).
