@@ -30,7 +30,7 @@
 #'
 
 # Function to check model for divergent transitions
-#' @export
+#' @export check.divergent.transitions
 check.divergent.transitions <- function(fit, model_name = NA_character_) {
 
   sampler_params <- rstan::get_sampler_params(fit, inc_warmup = FALSE)

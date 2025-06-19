@@ -31,7 +31,7 @@
 #'
 #' }
 
-#' @export
+#' @export run.exponential.model
 run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma = 0.04) {
 
   t <- 1:days
@@ -119,7 +119,7 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "CI", "test_positivity", "test_positivity_sim",
                          "day_of_year", "true_disease", "ppv", "npv",
                          "test_result_overall"))
-#' @export
+#' @export sim.test.data.exp
 sim.test.data.exp <- function(sim_size = 1000, days = 365,
                                test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                                   test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),

@@ -70,7 +70,7 @@
 utils::globalVariables(c("ess_threshold", "matches", "unite", "metric", "stat", "metric_stat",
   "sim_sens", "sim_spec", "sim_prev", "sim_prob", "everything"))
 
-#' @export
+#' @export run.sims.LC
 run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c(1), p_performed_vec= c(1),
                         sim_size=1000, iter=1000, chains=4, warmup=500, stan_arg=list(), data_ID = "sims",
                         prior_spec = NULL, prior_sens = NULL, set.seed = 9876

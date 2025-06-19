@@ -32,7 +32,7 @@ utils::globalVariables(c(
   "test_result_overall", "true_prev"
 ))
 
-#' @export
+#' @export prev.time.plots
 prev.time.plots <- function(run.LC.model_output, sim_time_data = NULL, time_resolution = "days") {
 
   stan_fit_summary_df <- run.LC.model_output$stan_fit_summary_df

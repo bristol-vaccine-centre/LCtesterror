@@ -114,7 +114,7 @@ utils::globalVariables(c("delay", "Time", "time", "week", "CI_min", "CI_max", "m
                          ".", "2.5%", "97.5%", "Sensitivity", "Specificity",
                          "week", "CI_min", "CI_max", "value", "type", "n"))
 
-#' @export
+#' @export run.LC.model
 run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NULL,
                          dependency_groups = list(),
                          prior_spec = NULL, prior_sens = NULL,

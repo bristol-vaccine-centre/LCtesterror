@@ -163,7 +163,7 @@ utils::globalVariables(c("Simulated_prev", "Simulated_sens", "Simulated_spec", "
                          "stan_prev_CI_high", "sens_median", "Test_ID", "sens_median_CI_low", "sens_median_CI_high",
                          "spec_median", "spec_median_CI_low", "spec_median_CI_high", "overall_test_positivity_sim",
                          "Simulated_overall_test_positivity", "CI_lower", "CI_upper", "model_id", "overall_weekly_test_positivity"))
-#' @export
+#' @export sim.result.time.plot
 sim.result.time.plot <- function(sim_stan_results) {
 
   plots <- list()

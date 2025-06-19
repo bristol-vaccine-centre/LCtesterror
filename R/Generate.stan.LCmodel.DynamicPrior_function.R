@@ -35,7 +35,7 @@
 #' }
 #'
 
-#' @export
+#' @export generate.stan.model
 generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()
                                 ) {
 
