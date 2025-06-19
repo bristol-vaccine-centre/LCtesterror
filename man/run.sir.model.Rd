@@ -4,7 +4,7 @@
 \alias{run.sir.model}
 \title{Generates and solves an SIR model with seasonal forcing}
 \usage{
-run.sir.model(
+\method{run}{sir.model}(
   years = 50,
   N = 1,
   init = list(init_S = 0.99, init_I = 0.01, init_R = 0),

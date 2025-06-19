@@ -7,7 +7,6 @@
 #' @param beta0 Base transmission rate. Default = 0.06.
 #' @param gamma Recovery rate. Default = 0.04.
 #' @return A dataframe of model results at each timepoint. Includes: Time = day; I_t = prevalence; R0_t = reproduction number .
-#' @export
 #' @name run.exponential.model
 #'
 #' @examples
@@ -32,7 +31,7 @@
 #'
 #' }
 
-
+#' @export
 run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma = 0.04) {
 
   t <- 1:days
@@ -98,7 +97,6 @@ run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma =
 #'   \item{epi_R_estimate}{Daily mean R(t) estimates from EpiEstim using observed incidence from simulated test data with test error. Output from Epiestim, but contains overall sens/spec columns (overall across tests)}
 #'   \item{epi_R_estimate_true}{Daily mean R(t) estimates from EpiEstim using true incidence. Output from Epiestim, but contains overall sens/spec columns (overall across tests)}
 #' }
-#' @export
 #' @importFrom EpiEstim estimate_R make_config
 #' @importFrom dplyr mutate group_by summarise ungroup select starts_with
 #' @importFrom tidyr pivot_wider
@@ -121,7 +119,7 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "CI", "test_positivity", "test_positivity_sim",
                          "day_of_year", "true_disease", "ppv", "npv",
                          "test_result_overall"))
-
+#' @export
 sim.test.data.exp <- function(sim_size = 1000, days = 365,
                                test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                                   test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),

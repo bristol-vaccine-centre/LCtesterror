@@ -18,7 +18,6 @@
 #' If beta0 is null it is calculated as desired_R0 * gamma.
 #' @return A dataframe of SIR model results at each timepoint (in days).
 #' Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
-#' @export
 #' @importFrom deSolve ode
 #' @name run.sir.model
 #'
@@ -75,6 +74,7 @@
 
 
 # Run SIR Model function
+#' @export
 run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
                           params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
 
@@ -234,7 +234,6 @@ run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #'   \item{epi_R_estimate}{Daily mean R(t) estimates from EpiEstim using observed incidence from simulated test data with test error. Output from Epiestim, but contains overall sens/spec columns (overall across tests)}
 #'   \item{epi_R_estimate_true}{Daily mean R(t) estimates from EpiEstim using true incidence. Output from Epiestim, but contains overall sens/spec columns (overall across tests)}
 #' }
-#' @export
 #' @importFrom deSolve ode
 #' @importFrom EpiEstim estimate_R make_config
 #' @importFrom dplyr mutate group_by summarise ungroup select starts_with
@@ -258,7 +257,7 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "CI", "test_positivity", "test_positivity_sim",
                          "day_of_year", "true_disease", "ppv", "npv",
                          "test_result_overall"))
-
+#' @export
 sim.test.data.time <- function(sim_size = 1000, days = 365,
                                test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                                   test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),

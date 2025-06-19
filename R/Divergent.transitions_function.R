@@ -6,7 +6,6 @@
 #' @param fit Stan model fit object.
 #' @param model_name Optional model name identifier. Default = NA.
 #' @return Dataframe with the specified model name, the number of divergent transitions, and logical indicating if bulk ESS is too low for prev/sens/spec parameters.
-#' @export
 #' @importFrom rstan get_sampler_params summary
 #' @importFrom dplyr filter group_by summarise mutate n cross_join select case_when rowwise left_join
 #' @importFrom magrittr %>%
@@ -31,6 +30,7 @@
 #'
 
 # Function to check model for divergent transitions
+#' @export
 check.divergent.transitions <- function(fit, model_name = NA_character_) {
 
   sampler_params <- rstan::get_sampler_params(fit, inc_warmup = FALSE)

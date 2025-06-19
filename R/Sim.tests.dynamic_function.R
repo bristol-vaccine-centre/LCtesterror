@@ -18,7 +18,6 @@
 #'   \item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters.
 #'         If delay = TRUE, additional delay columns are included specifying the delay for each test.}
 #' }
-#' @export
 #' @importFrom dplyr filter group_by summarise mutate n cross_join select case_when rowwise left_join
 #' @importFrom magrittr %>%
 #' @importFrom tibble tibble
@@ -58,7 +57,7 @@ default_delay_effect <- function(delay_day, sens) {
   pmax(sens - 0.02 * delay_day, 0.5)  # Ensures sens doesn't go below 0.5
 }
 
-
+#' @export
 sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
                           test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                              test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),

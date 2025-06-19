@@ -44,7 +44,6 @@
 #'   \item{include_time}{Logical; whether time was included in the model.}
 #'   \item{include_delay}{Logical; whether delay was included in the model.}
 #' }
-#' @export
 #' @importFrom rstan summary sampling rstan_options traceplot stan_dens
 #' @importFrom dplyr filter group_by mutate rename row_number all_of starts_with n_distinct relocate summarise n select
 #' @importFrom tidyr pivot_longer pivot_wider
@@ -115,6 +114,7 @@ utils::globalVariables(c("delay", "Time", "time", "week", "CI_min", "CI_max", "m
                          ".", "2.5%", "97.5%", "Sensitivity", "Specificity",
                          "week", "CI_min", "CI_max", "value", "type", "n"))
 
+#' @export
 run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NULL,
                          dependency_groups = list(),
                          prior_spec = NULL, prior_sens = NULL,
@@ -378,8 +378,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       prev_time_rows <- grepl("^weekly_prevalence", rownames(stan_fit_summary_df))
       stan_fit_summary_prev_time <- subset(stan_fit_summary_df, prev_time_rows)
       stan_fit_summary_prev_time_df <- stan_fit_summary_prev_time %>% dplyr::select(mean, '2.5%', '97.5%') %>%
-        mutate(week = row_number()) %>%
-        rename(CI_min = '2.5%', CI_max = '97.5%', mean_prevalence = mean)
+        dplyr::mutate(week = row_number()) %>%
+        dplyr::rename(CI_min = '2.5%', CI_max = '97.5%', mean_prevalence = mean)
 
       prev_time_plot <- stan_fit_summary_prev_time_df %>%
         ggplot(aes(y=mean_prevalence, x=week)) +

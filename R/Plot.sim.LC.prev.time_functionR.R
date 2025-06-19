@@ -11,7 +11,6 @@
 #'   \item{weekly_prev_plot}{Plot of weekly inferred prevalence from the LC model which adjusts test data for test error, with plotted test positivity (apparent prevalence), and true prevalence if simulated}
 #'   \item{weekly_data}{Data aggregated to weekly}
 #' }
-#' @export
 #' @importFrom dplyr group_by mutate rename case_when left_join if_else across all_of summarise
 #' @importFrom ggplot2 ggplot aes geom_point geom_ribbon geom_line geom_smooth labs theme_bw scale_color_manual scale_fill_manual guides guide_legend
 #' @name prev.time.plots
@@ -33,7 +32,7 @@ utils::globalVariables(c(
   "test_result_overall", "true_prev"
 ))
 
-
+#' @export
 prev.time.plots <- function(run.LC.model_output, sim_time_data = NULL, time_resolution = "days") {
 
   stan_fit_summary_df <- run.LC.model_output$stan_fit_summary_df

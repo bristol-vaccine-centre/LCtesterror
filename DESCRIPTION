@@ -23,7 +23,9 @@ Imports: rstan,
  deSolve,
  tidyselect,
  stringr,
- purrr
+ purrr,
+ future,
+ furrr
 Suggests: 
     knitr,
     rmarkdown,

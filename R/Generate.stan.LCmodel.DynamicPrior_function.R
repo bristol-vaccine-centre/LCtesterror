@@ -11,7 +11,6 @@
 #' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
 #' Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.
 #' @return Stan LC model code.
-#' @export
 #' @importFrom magrittr %>%
 #' @importFrom gridExtra grid.arrange
 #' @name generate.stan.model
@@ -36,7 +35,7 @@
 #' }
 #'
 
-
+#' @export
 generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()
                                 ) {
 
