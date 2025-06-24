@@ -160,25 +160,28 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   transformed parameters {
-    simplex[2] theta;
     vector[N] prob[T, 2];
 
  ")
 
   if (include_time) {
     stan_code <- paste0(stan_code, "
+
+     simplex[2] theta[N];
+
   for (n in 1:N) {
     real seasonal_effect = prev_amplitude * exp(-0.5 * square((time_points[n] - mean_gaussian) / sigma_gaussian));
     real prevalence = prev_baseline + seasonal_effect;
 
     prevalence = fmin(fmax(prevalence, 0.0), 1.0);
 
-    theta[1] = 1 - prevalence;
-    theta[2] = prevalence;
+    theta[n][1] = 1 - prevalence;
+    theta[n][2] = prevalence;
    }
   ")
   } else {
     stan_code <- paste0(stan_code, "
+    simplex[2] theta;
     theta[1] = 1 - prev;
     theta[2] = prev;
 
@@ -235,6 +238,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     vector[N] log_lik;
     ")
 
+ #priors
   for (t in 1:T){
     stan_code <- paste0(stan_code, "
   target += beta_lpdf(a",t,"1 | alpha_spec[",t,"], beta_spec[",t,"]);
@@ -256,10 +260,10 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     mean_gaussian ~ uniform(0, 52);
     sigma_gaussian ~ normal(0, 10);
     ")
-  } else {  stan_code <- paste0(stan_code, "
+   } else {  stan_code <- paste0(stan_code, "
   prev ~ beta(1, 1);
   ")
-  }
+   }
 
   if (include_delay) {
     stan_code <- paste0(stan_code, "
@@ -272,16 +276,41 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
 
     pos = 1;
 
+  ")
+
+  if (include_time) {
+    stan_code <- paste0(stan_code, "
+
+    for(n in 1:N){
+      for(k in 1:2){
+
+      ps[k] = log(theta[n][k]) + binomial_lpmf(segment(y, pos, s[n]) | 1, prob[segment(tt, pos, s[n]),k,n]);
+
+    }
+
+  target += log_sum_exp(ps); //calculates log of sum of exponentials of ps values for each latent class.
+  pos = pos + s[n];
+
+  }
+     ")
+  } else {
+  stan_code <- paste0(stan_code, "
+
   for(n in 1:N){
     for(k in 1:2){
       ps[k] = log(theta[k]) + binomial_lpmf(segment(y, pos, s[n]) | 1, prob[segment(tt, pos, s[n]),k,n]);
     }
-  target += log_sum_exp(ps);
+  target += log_sum_exp(ps); //calculates log of sum of exponentials of ps values for each latent class.
   pos = pos + s[n];
   log_lik[n] = log_sum_exp(ps);
 
-   }
- }
+  }
+
+    ")
+  }
+
+ stan_code <- paste0(stan_code, "
+  }
   generated quantities {
     for (i in 1:1) {
       print(\"Generating quantities1\");
@@ -326,5 +355,5 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   ")
 
   return(stan_code)
-}
+ }
 
