@@ -26,8 +26,10 @@ WORKDIR /usr/local/src
 COPY . LCtesterror
 
 # Install the package and its dependencies
-RUN R -e "remotes::install_deps('LCtesterror', dependencies = TRUE)"
-RUN R -e "remotes::install_local('LCtesterror')"
+RUN R -e "install.packages('future'); library(future); print('future installed OK')" && \
+    R -e "install.packages('remotes')" && \
+    R -e "remotes::install_deps('LCtesterror', dependencies = TRUE)" && \
+    R -e "remotes::install_local('LCtesterror')"
 
 # Set default command
 CMD ["R"]
