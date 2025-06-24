@@ -252,7 +252,7 @@ sim.result.time.plot <- function(sim_stan_results) {
     geom_line(aes(y = weekly_true_prev, color = "True prevalence"), linewidth = 1, alpha=0.8) +
     geom_point(aes(y = overall_weekly_test_positivity, color = "Apparent prevalence"), alpha=0.8) +
     geom_smooth(aes(y = overall_weekly_test_positivity, color = "Apparent prevalence"), se = FALSE, method = "loess", alpha=0.8) +
-    facet_grid(Sens ~ Spec , scales = "free",
+    facet_grid(Spec ~ Sens, scales = "free",
                labeller = label_both) +
     scale_color_manual(values = c(
                           "Inferred prevalence" = "black",
