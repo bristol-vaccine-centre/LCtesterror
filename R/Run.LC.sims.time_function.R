@@ -323,8 +323,9 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
 #' @description Runs multiple simulations of a bayesian LC stan model to infer true disease prevalence over time for a seasonal disease, test sensitivity, and specificity from
 #' simulated test data with different parameters values (sensitivity, specificity, and probability of the test occurring).
 #' Can simulate multiple test results but all with identical parameters.
-#' Runs different parameter combinations in parallel using furrr::future_map. Need to first define future amd number of nodes to parallise (workers) using future::plan(multicore, workers= ).
-#' This is seperate to rstan parallel processing of chains which uses options(mc.cores = parallel::detectCores())
+#' Runs different parameter combinations in parallel using furrr::future_map. Need to first define future and number of cores to parallise (workers) using future::plan(future::multisession, workers= ).
+#' This is separate to rstan parallel processing of chains which uses options(mc.cores = num_chains)
+#' Parallel processing i.e workers >1 will not work if using devtools::load_all()
 #'
 #' @param num_tests A numeric value for the number of tests to simulate and model.
 #' @param days Number of days to simulate. Default = 365.
