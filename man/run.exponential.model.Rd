@@ -4,7 +4,7 @@
 \alias{run.exponential.model}
 \title{Generates disease prevalence assuming exponential growth}
 \usage{
-run.exponential.model(days = 365, I0 = 1e-04, beta0 = 0.06, gamma = 0.04)
+\method{run}{exponential.model}(days = 365, I0 = 1e-04, beta0 = 0.06, gamma = 0.04)
 }
 \arguments{
 \item{days}{Number of days to simulate disease growth.}

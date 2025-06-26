@@ -329,12 +329,12 @@ run.sims.LC.parallel <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), se
     test_params <- list()
     for (i in 1:num_tests) {
       testname <- paste0("test", i)
-      test_params[[testname]] <- list(sens = s, spec = c, prev = p, p_performed = r)
+      test_params[[testname]] <- list(sens = s, spec = c, p_performed = r)
     }
 
   # Run model for each parameter combo:
   # Simulate data
-          sim_data <- sim.test.data(disease_prev=prev_vec[p], sim_size=sim_size, test_params=test_params)
+          sim_data <- sim.test.data(disease_prev= p, sim_size=sim_size, test_params=test_params)
 
           result_name <- paste("sens_", s, "_spec_", c, "_prev_", p, "_p_", r, sep = "")
 
@@ -402,7 +402,7 @@ run.sims.LC.parallel <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), se
           #Final results
           #Stan
           #pivot longer results for each test
-          sim_stan_result_df_ALL_long <- sim_stan_result_df_ALL %>%
+          sim_stan_result_df_long <- sim_stan_result_df %>%
             pivot_longer(
               cols = matches("^stan_(sens|spec)_test\\d+_.*"),
               names_to = c("metric", "test_id", "stat"),
@@ -415,7 +415,7 @@ run.sims.LC.parallel <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), se
             ) %>%
             mutate(test_id = as.factor(test_id)) %>%
             select(sim_sens, sim_spec, sim_prev, sim_prob, test_id, everything())
-          sim_stan_result_df_ALL_long$model_id <- result_name
+          sim_stan_result_df_long$model_id <- result_name
           #Sim
           sim_data$test_parameters$model_id <- result_name #model ID
 
