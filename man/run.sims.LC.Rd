@@ -48,6 +48,9 @@ Output from check.divergent.transitions().}
 Runs multiple simulations of a bayesian LC stan model to infer true disease prevalence, test sensitivity and specificity from
 simulated test data with different parameters values (prevalence, sensitivity, specificity, and probability of the test occurring).
 Can simulate multiple test results but all with identical parameters.
+#' Runs different parameter combinations in parallel using furrr::future_map. Need to first define future and number of cores to parallise (workers) using future::plan(future::multisession, workers= ).
+This is separate to rstan parallel processing of chains which uses options(mc.cores = num_chains)
+Parallel processing i.e workers >1 will not work if using devtools::load_all()
 }
 \details{
 For each combination of sensitivity, specificity, prevalence, and test performance probability,

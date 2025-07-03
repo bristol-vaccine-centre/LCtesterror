@@ -54,9 +54,19 @@
 \item{phi}{Phase shift of seasonal forcing}
 \item{gamma}{Recovery rate}
 \item{omega}{Waning immunity rate}
-}
 Default = beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001.
-If beta0 is null it is calculated as desired_R0 * gamma.}
+If beta0 is null it is calculated as desired_R0 * gamma.
+}}
+
+\item{exp_params}{list of exponential model parameters to simulate prevalence over time at the start of an epidemic. Includes:
+\describe{
+\item{I0}{Initial disease prevalence}
+\item{beta_0}{Baseline transmission rate}
+\item{gamma}{Recovery rate}
+Default = I0 = 0.0001, beta0 = 0.06, gamma = 0.04.
+}}
+
+\item{time_model}{If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".}
 }
 \value{
 Stan model fit and various summary outputs.
@@ -78,6 +88,9 @@ Output from check.divergent.transitions().}
 Runs multiple simulations of a bayesian LC stan model to infer true disease prevalence over time for a seasonal disease, test sensitivity, and specificity from
 simulated test data with different parameters values (sensitivity, specificity, and probability of the test occurring).
 Can simulate multiple test results but all with identical parameters.
+Can run different parameter combinations in parallel using furrr::future_map. Need to first define future and number of cores to parallise (workers) using future::plan(future::multisession, workers= ).
+This is separate to rstan parallel processing of chains which uses options(mc.cores = num_chains)
+Parallel processing i.e workers >1 will not work if using devtools::load_all()
 }
 \details{
 For each combination of sensitivity, specificity, prevalence, and test performance probability,
