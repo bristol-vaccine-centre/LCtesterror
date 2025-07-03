@@ -87,8 +87,8 @@ run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma =
 #' @return A list containing:
 #'  \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
-#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year, based on true prev, sens and spec parameters.}
-#'   \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day of the year simulated}
+#'   \item{test_results}{Simulated binary test results for each individual (N=sim_size) with a column for day of year (i.e time in days - can be >365), based on true prev, sens and spec parameters.}
+#'   \item{sim_data}{Simulated test data, including true prevalence, true infection status, test results, and simulated PPV and NPV values for each day simulated}
 #'   \item{incidence_data}{Daily test-derived and true case counts, as well as overall sensitivity and specificity (combined across all tests assuming parallel testing with any test positive assumed a disease positive).}
 #'   \item{custom_R_estimate}{Daily mean estimated R(t) based on observed (test-positive) incidence from simulated test data with test error using custom method. Contains overall sens/spec (overall across tests)}
 #'   \item{custom_R_estimate_true}{Daily mean estimated R(t) based on true incidence using custom method.Contains overall sens/spec (overall across tests)}

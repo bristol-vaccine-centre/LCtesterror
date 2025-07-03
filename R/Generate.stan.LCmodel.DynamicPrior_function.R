@@ -10,6 +10,7 @@
 #' @param include_delay Logical indicating whether delay until testing should be included in the model. Default = FALSE.
 #' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
 #' Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.
+#' @param time_model If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".
 #' @return Stan LC model code.
 #' @importFrom magrittr %>%
 #' @importFrom gridExtra grid.arrange
@@ -36,13 +37,14 @@
 #'
 
 #' @export generate.stan.model
-generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list()
-                                ) {
+generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list(),
+                                time_model = "gaussian") {
 
   # Identify valid dependency groups (ignoring single-test groups)
   valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
   num_valid_groups <- length(valid_groups)
   G <- num_valid_groups
+  time_exp <- time_model == "exponential"
   message(paste("valid_groups:", paste(valid_groups, collapse=", ")))
   message(paste("num_valid_groups:", paste(num_valid_groups, collapse=", ")))
   message(paste("G:", paste(G, collapse=", ")))
@@ -94,7 +96,9 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
                         ")
   }
   if (include_time) {
-    stan_code <- paste0(stan_code, "vector[N] time_points;\n")
+    stan_code <- paste0(stan_code, "vector[N] time_points;\n
+                        int<lower=1> max_time;
+                        ")
   }
 
   if (include_delay) {
@@ -140,17 +144,23 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_time) {
-    stan_code <- paste0(stan_code, "
+    if (time_exp) {  stan_code <- paste0(stan_code, "
+         real<lower=0,upper=1> prev_baseline;
+         real<lower=0> growth_rate;
+      ")
+    } else {  stan_code <- paste0(stan_code, "
     real<lower=0,upper=1> prev_amplitude;
     real<lower=0,upper=1> prev_baseline;
     real<lower=0> sigma_gaussian;
     real<lower=0, upper=52> mean_gaussian;
     ")
-  } else {
+  }
+    } else {
     stan_code <- paste0(stan_code, "
     real<lower=0,upper=1> prev;
       ")
   }
+
 
   if (include_delay) {
     stan_code <- paste0(stan_code, "real<upper=0> delay_pos;\n")
@@ -165,6 +175,19 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
  ")
 
   if (include_time) {
+    if (time_exp) {  stan_code <- paste0(stan_code, "
+
+    simplex[2] theta[N];
+
+     for (n in 1:N) {
+      real prevalence = prev_baseline * exp(growth_rate * time_points[n]);
+      prevalence = fmin(fmax(prevalence, 0.0), 1.0);
+
+    theta[n][1] = 1 - prevalence;
+    theta[n][2] = prevalence;
+   }
+    ")
+    } else {
     stan_code <- paste0(stan_code, "
 
      simplex[2] theta[N];
@@ -179,7 +202,8 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     theta[n][2] = prevalence;
    }
   ")
-  } else {
+  }
+    } else {
     stan_code <- paste0(stan_code, "
     simplex[2] theta;
     theta[1] = 1 - prev;
@@ -187,6 +211,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
 
      ")
   }
+
 
   if (include_delay) {
     stan_code <- paste0(stan_code, "matrix[N, T] delay;
@@ -254,16 +279,23 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   if (include_time) {
+    if(time_exp) { stan_code <- paste0(stan_code, "
+     prev_baseline ~ beta(1, 1);
+     growth_rate ~ normal(0, 0.05);
+    ")
+  } else {
     stan_code <- paste0(stan_code, "
     prev_amplitude ~ beta(1, 1);
     prev_baseline ~ beta(1, 1);
     mean_gaussian ~ uniform(0, 52);
     sigma_gaussian ~ normal(0, 10);
     ")
-   } else {  stan_code <- paste0(stan_code, "
+   }
+    } else {  stan_code <- paste0(stan_code, "
   prev ~ beta(1, 1);
   ")
    }
+
 
   if (include_delay) {
     stan_code <- paste0(stan_code, "
@@ -338,6 +370,15 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   ")
 
   if (include_time) {
+    if(time_exp) { stan_code <- paste0(stan_code, "
+      real weekly_prevalence[max_time];
+        // Calculate weekly prevalence using exponential growth:
+   for (w in 1:max_time) {
+      real prevalence = prev_baseline * exp(growth_rate * w);
+      weekly_prevalence[w] = fmin(fmax(prevalence, 0.0), 1.0);
+   }
+      ")
+    } else {
     stan_code <- paste0(stan_code, "
   real weekly_prevalence[52];
 
@@ -348,6 +389,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
     weekly_prevalence[w] = fmin(fmax(prevalence, 0.0), 1.0);
   }
   ")
+    }
   }
 
   stan_code <- paste0(stan_code, "
