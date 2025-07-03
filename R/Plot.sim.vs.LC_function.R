@@ -46,15 +46,17 @@ sim.result.plot <- function(sim_stan_results) {
   plots <- list()
 
 
-  sim_stan_results_combined <- dplyr::left_join(sim_stan_results$stan_results_df, sim_stan_results$sim_inputs, by = c("model_id", "test_id"))
+  sim_stan_results_combined1 <- dplyr::left_join(sim_stan_results$stan_results_df, sim_stan_results$sim_inputs, by = c("model_id", "test_id"))
+  sim_stan_results_combined2 <- left_join(sim_stan_results_combined1 , sim_stan_results$divergence_summary, by = c("model_id"))
 
 
-  sim_stan_results_combined <-  sim_stan_results_combined %>%
+  sim_stan_results_combined <-  sim_stan_results_combined2 %>%
     dplyr::rename(Simulated_prev = sim_prev,
                   Simulated_sens = sim_sens,
                   Simulated_spec = sim_spec,
                   Test_ID = test_id,
-                  Simulated_overall_test_positivity = overall_test_positivity_sim)
+                  Simulated_overall_test_positivity = overall_test_positivity_sim) %>%
+    mutate(Inferred_prev_divergent = factor(ifelse((divergent_count > 0 | low_ess == TRUE), "Not converged", "Inferred prevalence")))
 
   theme <- theme_linedraw() + theme(axis.text.x = element_text(angle = 45, hjust = 1),
                               strip.background = element_rect(fill = "white"),
@@ -72,18 +74,21 @@ sim.result.plot <- function(sim_stan_results) {
     dplyr::filter(Test_ID == "test1") %>% #all tests have the same results
     ggplot(aes(x = Simulated_prev)) +
     geom_abline(intercept = 0, slope = 1, colour = "grey") +
-    geom_point(aes(y = stan_prev, colour="Inferred prevalence"), shape=21, fill="black", size=1) +
-    geom_errorbar(aes(ymin = stan_prev_CI_low, ymax = stan_prev_CI_high, colour="Inferred prevalence"), width = 0, linewidth=1, alpha=0.8) +
+    geom_point(aes(y = stan_prev, colour=Inferred_prev_divergent, fill=Inferred_prev_divergent), shape=21, size=1) +
+    geom_errorbar(aes(ymin = stan_prev_CI_low, ymax = stan_prev_CI_high, colour=Inferred_prev_divergent), width = 0, linewidth=0.5, alpha=0.5) +
     #overall test positivity (assuming any test positive is a positive):
     geom_point(aes(y = Simulated_overall_test_positivity, color = "Test positivity"), shape=21, fill="tomato2", size=0.8, alpha=0.8) +
-    geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper, color = "Test positivity"), width = 0, linewidth=0.8, alpha=0.6) +
+    geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper, color = "Test positivity"), width = 0, linewidth=0.5, alpha=0.5) +
     facet_grid(Simulated_spec ~ Simulated_sens, scales = "free",
                labeller = label_both) +
-  scale_color_manual(name = "Estimate type",
-      values = c("Inferred prevalence" = "black", "Test positivity" = "tomato2")) +
+    scale_color_manual(name = "Estimate type",
+                       values = c("Inferred prevalence" = "black", "Not converged" = "grey85", "Test positivity" = "tomato2")) +
+    scale_fill_manual(name = "Estimate type",
+                      values = c("Inferred prevalence" = "black", "Not converged" = "grey85", "Test positivity" = "tomato2")) +
     labs(title = "Simuated vs inferred prevalence", x = "Simulated prevalence", y = "Inferred prevalence") +
     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
-    theme
+    theme +
+    guides(fill = "none", color = guide_legend(title = "Estimate type") )
 
   plots$prev <- plot_prev
 
@@ -91,7 +96,7 @@ sim.result.plot <- function(sim_stan_results) {
     ggplot(aes(x = Simulated_sens, y = sens_median, colour=Test_ID)) +
     geom_abline(intercept = 0, slope = 1, colour = "grey") +
     geom_point(size=1, alpha=0.8) +
-    geom_errorbar(aes(ymin = sens_median_CI_low, ymax = sens_median_CI_high), width = 0, linewidth=1,alpha=0.4) +
+    geom_errorbar(aes(ymin = sens_median_CI_low, ymax = sens_median_CI_high), width = 0, linewidth=0.5,alpha=0.4) +
     facet_grid(Simulated_spec ~ Simulated_prev, scales = "free",
                labeller = label_both) +
     scale_color_brewer(palette = "Dark2") +
@@ -105,7 +110,7 @@ sim.result.plot <- function(sim_stan_results) {
     ggplot(aes(x = Simulated_spec, y = spec_median, colour=Test_ID)) +
     geom_abline(intercept = 0, slope = 1, colour = "grey") +
     geom_point(size=1, alpha=0.8) +
-    geom_errorbar(aes(ymin = spec_median_CI_low, ymax = spec_median_CI_high), width = 0, linewidth=1, alpha=0.4) +
+    geom_errorbar(aes(ymin = spec_median_CI_low, ymax = spec_median_CI_high), width = 0, linewidth=0.5, alpha=0.4) +
     facet_grid(Simulated_sens ~ Simulated_prev, scales = "free",
                labeller = label_both) +
     scale_color_brewer(palette = "Dark2") +
@@ -195,7 +200,7 @@ sim.result.time.plot <- function(sim_stan_results) {
     ggplot(aes(x = Simulated_sens, y = sens_median, colour=Test_ID)) +
     geom_abline(intercept = 0, slope = 1, colour = "grey") +
     geom_point(size=1, alpha=0.8) +
-    geom_errorbar(aes(ymin = sens_median_CI_low, ymax = sens_median_CI_high), width = 0, linewidth=1,alpha=0.4) +
+    geom_errorbar(aes(ymin = sens_median_CI_low, ymax = sens_median_CI_high), width = 0, linewidth=0.5,alpha=0.4) +
     facet_grid(~Simulated_spec, scales = "free",
                labeller = label_both) +
     scale_color_brewer(palette = "Dark2") +
@@ -209,7 +214,7 @@ sim.result.time.plot <- function(sim_stan_results) {
     ggplot(aes(x = Simulated_spec, y = spec_median, colour=Test_ID)) +
     geom_abline(intercept = 0, slope = 1, colour = "grey") +
     geom_point(size=1, alpha=0.8) +
-    geom_errorbar(aes(ymin = spec_median_CI_low, ymax = spec_median_CI_high), width = 0, linewidth=1, alpha=0.4) +
+    geom_errorbar(aes(ymin = spec_median_CI_low, ymax = spec_median_CI_high), width = 0, linewidth=0.5, alpha=0.4) +
     facet_grid(~Simulated_sens, scales = "free",
                labeller = label_both) +
     scale_color_brewer(palette = "Dark2") +
