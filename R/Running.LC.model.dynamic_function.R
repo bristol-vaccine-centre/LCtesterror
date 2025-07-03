@@ -19,6 +19,7 @@
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
 #' @param stan_arg Optional extra arguments to pass to the rstan::sampling function. Default = NULL.
 #' @param covariates Optional vector of covariates to include in the model. Either c("Time") or c("Delay"). If specified, relevant individual-level data must be provided in data. Default = NULL.
+#' @param time_model If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".
 #' @param prior_list Optional list of prior distributions-specified to generate in R- to plot with posteriors.
 #' @param n_samples If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.
 #' @param model_name Optional name of model. Default = NULL.
@@ -120,7 +121,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                          prior_spec = NULL, prior_sens = NULL,
                          prior_delay = NULL,
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
-                         covariates = NULL, prior_list = NULL, n_samples=iter,
+                         covariates = NULL, time_model = "gaussian",
+                         prior_list = NULL, n_samples=iter,
                          model_name=NULL, plot_chains=TRUE) {
 
   # Use tryCatch to handle errors inside the function
@@ -303,6 +305,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                       )
     if (!is.null(time_points)) { #add time points if time data given
       stan_data$time_points <- time_points
+      stan_data$max_time <- as.numeric(max(time_points))
     }
     if (!is.null(d)) { #add delay data if delay data is given
       stan_data$delay_days <- d
@@ -323,7 +326,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       }
     }
 
-    stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups)
+    stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups, time_model)
     message(stan_code)
     # Compile Stan model from generated code
     stan_model_compiled <- rstan::stan_model(model_code = stan_code)

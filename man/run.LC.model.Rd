@@ -32,6 +32,8 @@ Example for scenario where tests 1+2 are dependent on each other and where tests
 
 \item{covariates}{Optional vector of covariates to include in the model. Either c("Time") or c("Delay"). If specified, relevant individual-level data must be provided in data. Default = NULL.}
 
+\item{time_model}{If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".}
+
 \item{prior_list}{Optional list of prior distributions-specified to generate in R- to plot with posteriors.}
 
 \item{n_samples}{If prior_list provided, number of times to samples from the specified prior distributions. Default = 1000.}

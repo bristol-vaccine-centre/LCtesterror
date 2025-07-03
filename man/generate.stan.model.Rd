@@ -8,7 +8,8 @@ generate.stan.model(
   num_tests,
   include_time = FALSE,
   include_delay = FALSE,
-  dependency_groups = list()
+  dependency_groups = list(),
+  time_model = "gaussian"
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ generate.stan.model(
 
 \item{dependency_groups}{A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
 Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.}
+
+\item{time_model}{If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".}
 }
 \value{
 Stan LC model code.
