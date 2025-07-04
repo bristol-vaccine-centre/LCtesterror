@@ -25,7 +25,8 @@ Imports: rstan,
  stringr,
  purrr,
  future,
- furrr
+ furrr,
+ RColorBrewer 
 Suggests: 
     knitr,
     rmarkdown,

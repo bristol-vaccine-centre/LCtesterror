@@ -16,10 +16,11 @@
 #'   \item{3) Specificity}{LC model inferred test specificities (mean across chains, median across iterations) vs simulated test specificities;}
 #' }
 #' @importFrom ggplot2 ggplot theme theme_classic theme_linedraw geom_abline geom_point geom_errorbar facet_grid labs coord_cartesian element_text element_rect element_blank unit label_both scale_color_manual scale_color_brewer
-#' @importFrom dplyr rename left_join filter case_when
+#' @importFrom dplyr rename left_join filter pull
 #' @importFrom magrittr %>%
 #' @importFrom tibble tibble
 #' @importFrom utils globalVariables
+#' @importFrom RColorBrewer brewer.pal
 #' @name sim.result.plot
 #' @examples
 #' if (interactive()) {
@@ -39,7 +40,8 @@
 utils::globalVariables(c("Simulated_prev", "Simulated_sens", "Simulated_spec", "stan_prev", "stan_prev_CI_low",
                          "stan_prev_CI_high", "sens_median", "Test_ID", "sens_median_CI_low", "sens_median_CI_high",
                          "spec_median", "spec_median_CI_low", "spec_median_CI_high", "overall_test_positivity_sim",
-                         "Simulated_overall_test_positivity", "CI_lower", "CI_upper"))
+                         "Simulated_overall_test_positivity", "CI_lower", "CI_upper",
+                         "divergent_count", "low_ess", "Test_ID_divergent", "Prev", "Inferred_prev_divergent", "Sens", "Spec"))
 #' @export
 sim.result.plot <- function(sim_stan_results) {
 
@@ -62,7 +64,7 @@ sim.result.plot <- function(sim_stan_results) {
   # list of test_id levels
   test_ids <- sim_stan_results_combined %>%
     filter(Test_ID_divergent != "Not converged") %>%
-    pull(Test_ID_divergent) %>%
+    dplyr::pull(Test_ID_divergent) %>%
     unique()
   # named color vector
   named_colors <- setNames(dark2_cols[1:length(test_ids)], test_ids)
@@ -150,10 +152,11 @@ sim.result.plot <- function(sim_stan_results) {
 #'   \item{3) Specificity}{LC model inferred test specificities (mean across chains, median across iterations) vs simulated test specificities;}
 #' }
 #' @importFrom ggplot2 ggplot theme theme_classic theme_linedraw geom_abline geom_point geom_errorbar facet_grid labs coord_cartesian element_text element_rect element_blank unit label_both scale_color_manual scale_color_brewer
-#' @importFrom dplyr rename left_join filter case_when
+#' @importFrom dplyr rename left_join filter pull
 #' @importFrom magrittr %>%
 #' @importFrom tibble tibble
 #' @importFrom utils globalVariables
+#' @importFrom RColorBrewer brewer.pal
 #' @name sim.result.time.plot
 #' @examples
 #' if (interactive()) {
@@ -175,7 +178,9 @@ sim.result.plot <- function(sim_stan_results) {
 utils::globalVariables(c("Simulated_prev", "Simulated_sens", "Simulated_spec", "stan_prev", "stan_prev_CI_low",
                          "stan_prev_CI_high", "sens_median", "Test_ID", "sens_median_CI_low", "sens_median_CI_high",
                          "spec_median", "spec_median_CI_low", "spec_median_CI_high", "overall_test_positivity_sim",
-                         "Simulated_overall_test_positivity", "CI_lower", "CI_upper", "model_id", "overall_weekly_test_positivity"))
+                         "Simulated_overall_test_positivity", "CI_lower", "CI_upper", "model_id", "overall_weekly_test_positivity",
+                         "divergent_count", "low_ess", "Test_ID_divergent", "Prev", "Inferred_prev_divergent", "Sens", "Spec"))
+
 #' @export sim.result.time.plot
 sim.result.time.plot <- function(sim_stan_results) {
 
@@ -197,7 +202,7 @@ sim.result.time.plot <- function(sim_stan_results) {
   # list of test_id levels
   test_ids <- sim_stan_results_combined %>%
     filter(Test_ID_divergent != "Not converged") %>%
-    pull(Test_ID_divergent) %>%
+    dplyr::pull(Test_ID_divergent) %>%
     unique()
   # named color vector
   named_colors <- setNames(dark2_cols[1:length(test_ids)], test_ids)
