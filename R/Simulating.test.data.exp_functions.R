@@ -7,7 +7,6 @@
 #' @param beta0 Base transmission rate. Default = 0.06.
 #' @param gamma Recovery rate. Default = 0.04.
 #' @return A dataframe of model results at each timepoint. Includes: Time = day; I_t = prevalence; R0_t = reproduction number .
-#' @name run.exponential.model
 #'
 #' @examples
 #' if (interactive()) {
@@ -30,7 +29,7 @@
 #'   scale_y_continuous(labels = function(x) sprintf("%.2f", x))
 #'
 #' }
-
+#' @name run.exponential.model
 #' @export run.exponential.model
 run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma = 0.04) {
 

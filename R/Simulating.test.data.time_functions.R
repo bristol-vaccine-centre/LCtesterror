@@ -19,7 +19,6 @@
 #' @return A dataframe of SIR model results at each timepoint (in days).
 #' Includes: numbers in S, I, R compartments; R0_t, Re_t, beta_t values; the proportion in S, I, R compartments; units of time; and the calculated_N (population size).
 #' @importFrom deSolve ode
-#' @name run.sir.model
 #'
 #' @examples
 #' if (interactive()) {
@@ -74,6 +73,7 @@
 
 
 # Run SIR Model function
+#' @name run.sir.model
 #' @export run.sir.model
 run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
                           params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
