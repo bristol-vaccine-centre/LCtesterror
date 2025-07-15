@@ -132,6 +132,7 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
     stringsAsFactors = FALSE
   )
 
+  message(paste("Time_model", paste(time_model, collapse=", ")))
 
   # Wrapper function to run simulation/model for one parameter combo
   run.for.param.combo <- function(param_row) {
