@@ -78,7 +78,7 @@ sim.result.plot <- function(sim_stan_results) {
                               legend.key = element_rect(fill = "white", colour = NA),
                               legend.key.size = unit(1.2, "lines"),
                               legend.position = "bottom",
-                              legend.text = element_text(size=10), legend.title = element_text(size=12),
+                              legend.text = element_text(size=12), legend.title = element_text(size=12),
                               axis.title = element_text(size = 14))
 
 
@@ -93,8 +93,8 @@ sim.result.plot <- function(sim_stan_results) {
     geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper, color = "Test positivity"), width = 0, linewidth=0.5, alpha=0.5) +
     facet_grid(Spec ~ Sens, scales = "free",
                labeller = label_both) +
-    scale_color_manual(values = c("Inferred prevalence" = "black", "Not converged" = "grey85", "Test positivity" = "#009E73")) +
-    scale_fill_manual(values = c("Inferred prevalence" = "black", "Not converged" = "grey85", "Test positivity" = "#009E73")) +
+    scale_color_manual(values = c("Test positivity" = "#009E73", "Inferred prevalence" = "black", "Not converged" = "grey85")) +
+    scale_fill_manual(values = c("Test positivity" = "#009E73", "Inferred prevalence" = "black", "Not converged" = "grey85")) +
     labs(title = "Simuated vs inferred prevalence", x = "Simulated prevalence", y = "Inferred prevalence", color = NULL, fill = NULL) +
     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
     theme +
@@ -216,7 +216,7 @@ sim.result.time.plot <- function(sim_stan_results) {
                                     legend.key = element_rect(fill = "white", colour = NA),
                                     legend.key.size = unit(1.2, "lines"),
                                     legend.position = "bottom",
-                                    legend.text = element_text(size=10), legend.title = element_text(size=12),
+                                    legend.text = element_text(size=12), legend.title = element_text(size=12),
                                     axis.title = element_text(size = 14))
 
 
@@ -289,8 +289,8 @@ sim.result.time.plot <- function(sim_stan_results) {
     geom_line(aes(y = overall_weekly_test_positivity, color = "Test positivity"), stat="smooth", method="loess", alpha=0.6, linewidth = 1) + #using geom_line instead of geom_smooth so can use alpha on line colour
     facet_grid(Spec ~ Sens, scales = "free",
                labeller = label_both) +
-    scale_color_manual(values = c("Inferred prevalence" = "black", "Not converged" = "grey", "True prevalence" = "#D55E00", "Test positivity" = "#009E73")) +
-    scale_fill_manual(values = c("Inferred prevalence" = "black", "Not converged" = "grey", "Test positivity" = "#009E73")) +
+    scale_color_manual(values = c("True prevalence" = "#D55E00", "Test positivity" = "#009E73", "Inferred prevalence" = "black", "Not converged" = "grey")) +
+    scale_fill_manual(values = c("Test positivity" = "#009E73", "Inferred prevalence" = "black", "Not converged" = "grey")) +
     labs(y = "Prevalence", x = "Week", color = NULL, fill = NULL) +
     theme +
     guides(fill = "none", color = guide_legend() )
