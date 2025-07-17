@@ -333,8 +333,8 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
 
     # parallel processing for chains
     rstan_options(auto_write = TRUE)
-    #options(mc.cores = min(chains, parallel::detectCores()))
-    options(mc.cores = parallel::detectCores())
+    options(mc.cores = min(chains, parallel::detectCores()))
+    #options(mc.cores = parallel::detectCores())
 
     #model run
     stan_fit <- rstan::sampling(stan_model_compiled,
