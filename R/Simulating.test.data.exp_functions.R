@@ -11,7 +11,7 @@
 #' @examples
 #' if (interactive()) {
 #'
-#'exp_mod_result <- run.exponential.model(days=365, I0 = 0.0001,  beta0 = 0.06, gamma = 0.04)
+#'exp_mod_result <- exponential.model.run(days=365, I0 = 0.0001,  beta0 = 0.06, gamma = 0.04)
 #'
 #'# Plot the simulated cases over time
 #'exp_mod_result %>%
@@ -29,9 +29,9 @@
 #'   scale_y_continuous(labels = function(x) sprintf("%.2f", x))
 #'
 #' }
-#' @name run.exponential.model
-#' @export run.exponential.model
-run.exponential.model <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma = 0.04) {
+#' @name exponential.model.run
+#' @export exponential.model.run
+ exponential.model.run <- function(days = 365, I0 = 0.0001, beta0 = 0.06, gamma = 0.04) {
 
   t <- 1:days
   I_t <- numeric(length(t))  # Prev at each time point
@@ -145,7 +145,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
   if (is.null(max_t)) max_t <- 5 * mean_gi
 
   # EXP model output
-  exp_output <- run.exponential.model(days = days, I0 = params$I0, beta0 = params$beta0, gamma = params$gamma)
+  exp_output <- exponential.model.run(days = days, I0 = params$I0, beta0 = params$beta0, gamma = params$gamma)
 
 
   # Function to calculate PPV

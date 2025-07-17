@@ -22,7 +22,7 @@
 #'
 #' @examples
 #' if (interactive()) {
-#' sir_output <- run.sir.model(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
+#' sir_output <- sir.model.run(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
 #' params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
 #'
 #' # Plot proportions in each compartment over time
@@ -73,9 +73,9 @@
 
 
 # Run SIR Model function
-#' @name run.sir.model
-#' @export run.sir.model
-run.sir.model <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
+#' @name sir.model.run
+#' @export sir.model.run
+sir.model.run <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
                           params = list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001))
 
   {
@@ -285,7 +285,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
   if (is.null(max_t)) max_t <- 5 * mean_gi
 
   # SIR model output
-  sir_output <- run.sir.model(years=years, N=N, init=init, params=params)
+  sir_output <- sir.model.run(years=years, N=N, init=init, params=params)
 
   # Function to extract prevalence from final year SIR model output
   get.sir.prevalence <- function(day_of_year, sir_output=sir_output) {
