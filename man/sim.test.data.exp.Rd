@@ -21,7 +21,7 @@ Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = 
 
 \item{max_t}{Maximum time (days) used for calculating the gi_distribution for estimating R(t) from EpiEstim. Default = 5 * mean_gi}
 
-\item{params}{Exponential model parameters as a list. Defaults = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.004).}
+\item{params}{Exponential model parameters as a list. Defaults = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.04).}
 }
 \value{
 A list containing:
