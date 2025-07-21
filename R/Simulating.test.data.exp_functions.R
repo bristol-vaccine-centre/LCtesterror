@@ -82,7 +82,7 @@
 #' @param Est_R_n_samples Number of samples for uncertainty estimation in custom R(t). Default = 1000.
 #' @param mean_gi Mean generation interval used for estimating R(t) from EpiEstim. Default = 1/gamma.
 #' @param max_t Maximum time (days) used for calculating the gi_distribution for estimating R(t) from EpiEstim. Default = 5 * mean_gi
-#' @param params Exponential model parameters as a list. Defaults = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.004).
+#' @param params Exponential model parameters as a list. Defaults = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.04).
 #' @return A list containing:
 #'  \describe{
 #'   \item{test_parameters}{Test results table with row for each test (test_id) containing specified overall test parameters summarised across time (sens; spec; p_performed; disease_prev), simulated test_positivity, test_coverage (based on p_performed), and the estimated true disease prevalence estimate (disease_prev_est: based on the Rogan-Gladen equation) }
@@ -125,7 +125,7 @@ sim.test.data.exp <- function(sim_size = 1000, days = 365,
                                seed=953,
                                Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
                                mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
-                               params =list(I0 = 0.0001, beta0 = 0.06, gamma = 0.004)) #for exp model
+                               params =list(I0 = 0.0001, beta0 = 0.06, gamma = 0.04)) #for exp model
 {
 
   set.seed(seed)

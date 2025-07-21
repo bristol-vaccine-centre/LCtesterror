@@ -263,7 +263,7 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
                                                   test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
                                seed=953,
                                Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
-                               mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
+                               mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval distribution
                                years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
                                params =list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001)) #for SIR
   {
