@@ -113,7 +113,7 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
                                       mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
                                       years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
                                       SIR_params =list(beta0 = NULL, desired_R0 = 2.5, beta1 = 0.07, phi = 1.5, gamma = 0.03, omega = 0.001), #for SIR
-                                      exp_params = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.004),
+                                      exp_params = list(I0 = 0.0001, beta0 = 0.06, gamma = 0.04),
                                       time_model = "gaussian"
 ) {
 
