@@ -19,38 +19,19 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R packages listed in DESCRIPTION using remotes
-#RUN R -e "install.packages('remotes')"
+RUN R -e "install.packages('remotes')"
 
 # Copy your package to the image
-#WORKDIR /usr/local/src
-#COPY . LCtesterror
-COPY . /usr/local/src/LCtesterror
-WORKDIR /usr/local/src/LCtesterror
-
+WORKDIR /usr/local/src
+COPY . LCtesterror
 
 # Install the package and its dependencies
-#RUN R -e "install.packages('future'); library(future); print('future installed OK')" && \
-#    R -e "install.packages('remotes')" && \
-#   R -e "remotes::install_deps('LCtesterror', dependencies = TRUE)" && \
-#    R -e "remotes::install_local('LCtesterror')"
-
-# Install renv and restore locked dependencies
-# Confirm files exist
-RUN ls -lah /usr/local/src/LCtesterror/
-# Install renv and restore environment
-RUN R -e "install.packages('renv')"
-COPY renv.lock renv.lock
-ENV RENV_PATHS_LIBRARY=renv/library
-RUN R -e "renv::restore()"
-#RUN R -e "renv::install('.')"
-
-#install LCtesterror
-RUN R -e "install.packages('devtools')" && \
-    R -e "devtools::install_local('.', dependencies = TRUE)"
-
-#check that key packages work
-RUN R -e "library(future); library(LCtesterror); print('All good!')"
+RUN R -e "install.packages('future'); library(future); print('future installed OK')" && \
+    R -e "install.packages('remotes')" && \
+    R -e "remotes::install_deps('LCtesterror', dependencies = TRUE)" && \
+    R -e "remotes::install_local('LCtesterror')"
 
 # Set default command
 CMD ["R"]
+
 

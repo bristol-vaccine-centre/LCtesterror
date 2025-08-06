@@ -1,0 +1,82 @@
+# Base image with R and build tools
+FROM rocker/r-ver:4.3.2
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+ENV RENV_PATHS_LIBRARY=/usr/local/src/LCtesterror/renv/library
+ENV RENV_PATHS_ROOT=/usr/local/src/LCtesterror/renv
+ENV RENV_PATHS_CACHE=/usr/local/src/LCtesterror/renv/cache
+
+
+# Install system dependencies (e.g., for R packages that use C++ or XML)
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libgit2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    pandoc \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install R packages listed in DESCRIPTION using remotes
+#RUN R -e "install.packages('remotes')"
+
+
+# Create working directory
+WORKDIR /usr/local/src/LCtesterror
+# Copy package source and renv files
+COPY . .
+# Install renv and restore environment
+RUN R -e "install.packages('renv'); renv::restore()"
+# Install remotes (needed for install_local)
+RUN R -e "install.packages('remotes')"
+# Install your package using remotes
+RUN R -e "renv::activate(); remotes::install_local('/usr/local/src/LCtesterror', dependencies = TRUE); renv::snapshot()"
+# Check that key packages work
+# Base image with R and build tools
+FROM rocker/r-ver:4.3.2
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RENV_PATHS_LIBRARY=/usr/local/src/renv/library
+
+# Install system dependencies (e.g., for R packages that use C++ or XML)
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libgit2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    pandoc \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install R packages listed in DESCRIPTION using remotes
+#RUN R -e "install.packages('remotes')"
+
+
+# Create working directory
+WORKDIR /usr/local/src/LCtesterror
+# Copy package source and renv files
+COPY . .
+# Install renv and restore environment
+RUN mkdir -p /usr/local/src/LCtesterror/renv/library
+RUN R -e "install.packages('renv'); renv::restore()"
+# Install remotes (needed for install_local)
+RUN R -e "install.packages('remotes')"
+# Install your package using remotes
+RUN R -e "renv::activate(); remotes::install_local('/usr/local/src/LCtesterror', dependencies = TRUE); renv::snapshot()"
+# Check that key packages work
+RUN R -e "renv::activate(); library(future); library(LCtesterror); print('All good!'); print(packageVersion('LCtesterror'))"
+# Default command
+CMD ["R"]
+
+
