@@ -311,13 +311,14 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
   # simulate data using final year SIR prevalence
   synth_data <- expand.grid(
     pat_id = 1:sim_size,
-    day_of_year = (1:days - 1) %% 365 + 1 #wraps days into day of year (so will loop to 1 if days >365)
+    day_of_year = 1:days
   ) %>%
     dplyr::mutate(
-      true_disease = sapply(day_of_year, function(day) {
+      day_of_season = ((day_of_year - 1) %% 365) + 1, #wraps days into day of year (so will loop to 1 if days >365)
+      true_disease = sapply(day_of_season, function(day) {
         rbinom(1, 1, get.sir.prevalence(day, sir_output=sir_output))
       }),
-      true_prev = sapply(day_of_year, function(day) {
+      true_prev = sapply(day_of_season, function(day) {
         get.sir.prevalence(day, sir_output=sir_output)
       })
     ) %>%
