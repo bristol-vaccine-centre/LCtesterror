@@ -11,6 +11,10 @@
 #' @param dependency_groups A list of vectors specifying dependencies between tests. All test numbers that are not independent of each other are specified in a single vector. Test numbers refer to the order they are specified in the data columns.
 #' Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.
 #' @param time_model If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".
+#' @param priors List of any other priors, excluding sens/spec/delay priors (which are specified as stan data), to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+#' list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+#' gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+#' exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")
 #' @return Stan LC model code.
 #' @importFrom magrittr %>%
 #' @importFrom gridExtra grid.arrange
@@ -38,7 +42,7 @@
 
 #' @export generate.stan.model
 generate.stan.model <- function(num_tests, include_time = FALSE, include_delay = FALSE, dependency_groups = list(),
-                                time_model = "gaussian") {
+                                time_model = "gaussian", priors = list()) {
 
   # Identify valid dependency groups (ignoring single-test groups)
   valid_groups <- Filter(function(g) length(g) > 1, dependency_groups)
@@ -72,6 +76,20 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   message(paste(" dependency_group_existence:", paste( dependency_group_existence, collapse=", ")))
 
   T <- as.numeric(num_tests)
+
+  # priors
+  if (is.null(priors[["bpos_prior"]])) priors[["bpos_prior"]] <- "gamma(1,1)"
+  if (is.null(priors[["bneg_prior"]])) priors[["bneg_prior"]] <- "gamma(1,1)"
+  if (is.null(priors[["exp_prev_baseline_prior"]])) priors[["exp_prev_baseline_prior"]] <- "beta(1, 1)"
+  if (is.null(priors[["exp_growth_rate_prior"]])) priors[["exp_growth_rate_prior"]] <- "gamma(1, 5)"
+  if (is.null(priors[["gaussian_prev_amplitude_prior"]])) priors[["gaussian_prev_amplitude_prior"]] <- "beta(1, 1)"
+  if (is.null(priors[["gaussian_prev_baseline_prior"]])) priors[["gaussian_prev_baseline_prior"]] <- "beta(1, 1)"
+  if (is.null(priors[["mean_gaussian_prior"]])) priors[["mean_gaussian_prior"]] <- "uniform(0, 52)"
+  if (is.null(priors[["sigma_gaussian_prior"]])) priors[["sigma_gaussian_prior"]] <- "normal(0, 10)"
+  if (is.null(priors[["prev_prior"]])) priors[["prev_prior"]] <- "beta(1, 1)"
+  if (is.null(priors[["RE_prior"]])) priors[["RE_prior"]] <- "normal(0, 1)"
+
+
 
   # Start building Stan code
   stan_code <- "
@@ -273,26 +291,26 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
 
   if (add_dependency) {
   stan_code <- paste0(stan_code,
-                      "bpos ~ gamma(1,1);
-                             bneg ~ gamma(1,1);
+                      "bpos ~ ",priors[["bpos_prior"]],";
+                             bneg ~ ",priors[["bneg_prior"]],";
                           ")
   }
 
   if (include_time) {
     if(time_exp) { stan_code <- paste0(stan_code, "
-     prev_baseline ~ beta(1, 1);
-     growth_rate ~ normal(0, 0.05);
+     prev_baseline ~ ",priors[["exp_prev_baseline_prior"]],";
+     growth_rate ~ ",priors[["exp_growth_rate_prior"]],";
     ")
   } else {
     stan_code <- paste0(stan_code, "
-    prev_amplitude ~ beta(1, 1);
-    prev_baseline ~ beta(1, 1);
-    mean_gaussian ~ uniform(0, 52);
-    sigma_gaussian ~ normal(0, 10);
+    prev_amplitude ~ ",priors[["gaussian_prev_amplitude_prior"]],";
+    prev_baseline ~ ",priors[["gaussian_prev_baseline_prior"]],";
+    mean_gaussian ~ ",priors[["mean_gaussian_prior"]],";
+    sigma_gaussian ~ ",priors[["sigma_gaussian_prior"]],";
     ")
    }
     } else {  stan_code <- paste0(stan_code, "
-  prev ~ beta(1, 1);
+  prev ~ ",priors[["prev_prior"]],";
   ")
    }
 
@@ -304,7 +322,7 @@ generate.stan.model <- function(num_tests, include_time = FALSE, include_delay =
   }
 
   stan_code <- paste0(stan_code, "
-    RE ~ normal(0, 1);
+    RE ~ ",priors[["RE_prior"]],";
 
     pos = 1;
 
