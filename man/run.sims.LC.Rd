@@ -30,6 +30,17 @@
 
 \item{prior_sens}{Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.}
 
+\item{prior_delay}{Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).}
+
+\item{other_priors}{List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)")}
+
+\item{delay}{Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.}
+
+\item{delay_distribution}{Optional specified distribution of delay effect. A function that takes an integer \code{n} and returns a vector of length \code{n} representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).}
+
+\item{delay_effect_fn}{Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)}
+
 \item{set.seed}{Random seed for set.seed(). Default = 9876.}
 }
 \value{

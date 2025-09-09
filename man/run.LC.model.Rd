@@ -22,6 +22,11 @@ Example for scenario where tests 1+2 are dependent on each other and where tests
 
 \item{prior_delay}{Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).}
 
+\item{other_priors}{List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")}
+
 \item{iter}{The number of iterations for the stan model. Default = 1000.}
 
 \item{chains}{The number of chains for the stan model. Default = 4.}

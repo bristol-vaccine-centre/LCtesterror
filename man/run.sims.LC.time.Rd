@@ -30,6 +30,11 @@
 
 \item{prior_sens}{Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.}
 
+\item{other_priors}{List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+list(RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")}
+
 \item{seed}{Random seed for set.seed(). Default = 953.}
 
 \item{Est_R_window}{Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.}

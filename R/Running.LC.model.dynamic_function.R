@@ -14,6 +14,10 @@
 #' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
 #' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
 #' @param prior_delay Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).
+#' @param other_priors List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+#' list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+#' gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+#' exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")
 #' @param iter The number of iterations for the stan model. Default = 1000.
 #' @param chains The number of chains for the stan model. Default = 4.
 #' @param warmup The number of warmup iterations for the stan model. Default = 500.
@@ -120,6 +124,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
                          dependency_groups = list(),
                          prior_spec = NULL, prior_sens = NULL,
                          prior_delay = NULL,
+                         other_priors  = list(),
                          iter=1000, chains=4, warmup=500, stan_arg=list(),
                          covariates = NULL, time_model = "gaussian",
                          prior_list = NULL, n_samples=iter,
@@ -326,7 +331,7 @@ run.LC.model <- function(data, num_tests, test_names_defined=NULL, data_ID = NUL
       }
     }
 
-    stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups, time_model)
+    stan_code <- generate.stan.model(num_tests, include_time, include_delay, dependency_groups, time_model, priors=other_priors)
     message(stan_code)
     # Compile Stan model from generated code
     stan_model_compiled <- rstan::stan_model(model_code = stan_code)

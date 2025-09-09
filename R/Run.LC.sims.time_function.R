@@ -20,6 +20,10 @@
 #' @param data_ID Optional character identifier for labeling data outputs. Default = `"sims"`.
 #' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
 #' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
+#' @param other_priors List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+#' list(RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+#' gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+#' exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")
 #' @param seed Random seed for set.seed(). Default = 953.
 #' @param Est_R_window Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.
 #' @param Est_R_n_samples Number of samples for uncertainty estimation in custom R(t). Default = 1000.
@@ -108,7 +112,9 @@ utils::globalVariables(c("ess_threshold", "matches", "unite", "metric", "stat", 
 #' @export run.sims.LC.time
 run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(1), p_performed_vec= c(1),
                                       sim_size=1000, iter=1000, chains=4, warmup=500, stan_arg=list(), data_ID = "sims",
-                                      prior_spec = NULL, prior_sens = NULL, seed = 953,
+                                      prior_spec = NULL, prior_sens = NULL,
+                                      other_priors  = list(),
+                                      seed = 953,
                                       Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
                                       mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
                                       years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
@@ -176,6 +182,7 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
     result <- run.LC.model(data=test_results, num_tests=num_tests,
                            iter=iter, chains=chains, warmup=warmup, stan_arg=stan_arg,
                            data_ID = data_ID, prior_spec = prior_spec, prior_sens = prior_sens,
+                           other_priors = other_priors,
                            covariates = c("Time"), time_model = time_model)
 
 

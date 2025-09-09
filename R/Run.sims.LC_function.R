@@ -21,6 +21,12 @@
 #' @param data_ID Optional character identifier for labeling data outputs. Default = `"sims"`.
 #' @param prior_spec Specification of specificity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(10, 1) for each test.
 #' @param prior_sens Specification of sensitivity prior. A list of length equal to the value of num_tests with each element containing a vector of length two specifying the alpha and beta parameters for the Beta prior. Default = c(1, 1) for each test.
+#' @param prior_delay Specification of delay prior, if included in covariates. A vector of length two specifying the mu and sigma parameters for the Normal prior. Default = c(-0.5, 2).
+#' @param other_priors List of any other priors to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+#' list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)")
+#' @param delay Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.
+#' @param delay_distribution Optional specified distribution of delay effect. A function that takes an integer `n` and returns a vector of length `n` representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).
+#' @param delay_effect_fn Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)
 #' @param set.seed Random seed for set.seed(). Default = 9876.
 #' @return Stan model fit and various summary outputs.
 #' A list containing:
@@ -77,10 +83,19 @@
 utils::globalVariables(c("ess_threshold", "matches", "unite", "metric", "stat", "metric_stat",
                          "sim_sens", "sim_spec", "sim_prev", "sim_prob", "everything", "sim_stan_result_df_long"))
 
+default_delay_distribution <- function(n) sample(0:14, n, replace = TRUE)
+
+default_delay_effect <- function(delay_day, sens) {
+  pmax(sens - 0.02 * delay_day, 0.5)  # Ensures sens doesn't go below 0.5
+}
+
 #' @export run.sims.LC
 run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c(1), p_performed_vec= c(1),
                         sim_size=1000, iter=1000, chains=4, warmup=500, stan_arg=list(), data_ID = "sims",
-                        prior_spec = NULL, prior_sens = NULL, set.seed = 9876
+                        prior_spec = NULL, prior_sens = NULL, prior_delay = NULL, other_priors= list(),
+                        delay = FALSE, delay_distribution = default_delay_distribution,
+                        delay_effect_fn = default_delay_effect,
+                        set.seed = 9876
 ) {
 
   set.seed(set.seed)
@@ -117,14 +132,19 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
 
   # Run model for each parameter combo:
   # Simulate data
-          sim_data <- sim.test.data(disease_prev= p, sim_size=sim_size, test_params=test_params)
+          sim_data <- sim.test.data(disease_prev= p, sim_size=sim_size, test_params=test_params,
+                                    delay = delay, delay_distribution=delay_distribution, delay_effect_fn=delay_effect_fn)
 
           result_name <- paste("sens_", s, "_spec_", c, "_prev_", p, "_p_", r, sep = "")
+
+          if(delay) {covariates <- c("delay")} else {covariates <- NULL}
 
           # Run model
           result <- run.LC.model(data=sim_data$test_results, num_tests=num_tests,
                                  iter=iter, chains=chains, warmup=warmup, stan_arg=stan_arg,
-                                 data_ID = data_ID, prior_spec = prior_spec, prior_sens = prior_sens)
+                                 data_ID = data_ID, prior_spec = prior_spec, prior_sens = prior_sens,
+                                 prior_delay=prior_delay, other_priors=other_priors,
+                                 covariates = covariates)
 
           stan_fit <- result$stan_fit
           fit_summary <- rstan::summary(stan_fit)

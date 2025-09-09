@@ -9,7 +9,8 @@ generate.stan.model(
   include_time = FALSE,
   include_delay = FALSE,
   dependency_groups = list(),
-  time_model = "gaussian"
+  time_model = "gaussian",
+  priors = list()
 )
 }
 \arguments{
@@ -23,6 +24,11 @@ generate.stan.model(
 Example for scenario where tests 1+2 are dependent on each other and where tests 3+4 are dependent on each other: "list(c(1, 2), c(3, 4))". Default = NULL.}
 
 \item{time_model}{If covariates includes "Time", which model should be used to infer changing prevalence over time - "gaussian" (for a seasonal peak) or "exponential". Default = "gaussian".}
+
+\item{priors}{List of any other priors, excluding sens/spec/delay priors (which are specified as stan data), to be specified differently to the defaults. Given as character strings as written for stan. Defaults =
+list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
+gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
+exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")}
 }
 \value{
 Stan LC model code.

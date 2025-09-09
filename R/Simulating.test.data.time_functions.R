@@ -256,7 +256,7 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
                          "CI", "test_positivity", "test_positivity_sim",
                          "day_of_year", "true_disease", "ppv", "npv",
-                         "test_result_overall"))
+                         "test_result_overall", "day_of_season"))
 #' @export sim.test.data.time
 sim.test.data.time <- function(sim_size = 1000, days = 365,
                                test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
