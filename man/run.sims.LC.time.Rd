@@ -35,6 +35,11 @@ list(RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)"
 gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
 exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")}
 
+\item{sequential_testing}{Logical. For simulated data, are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.}
+
+\item{seq_order}{Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.}
+
 \item{seed}{Random seed for set.seed(). Default = 953.}
 
 \item{Est_R_window}{Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.}

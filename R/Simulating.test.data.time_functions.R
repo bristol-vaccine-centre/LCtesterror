@@ -203,6 +203,9 @@ sir.model.run <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ), for each test.
 #' Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8))
 #' @param seed For set.seed(). Default = 953.
+#' @param sequential_testing Logical. Are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.
+#' @param seq_order Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+#' Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.
 #' @param Est_R_window Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.
 #' @param Est_R_n_samples Number of samples for uncertainty estimation in custom R(t). Default = 1000.
 #' @param mean_gi Mean generation interval used for estimating R(t) from EpiEstim. Default = 1/gamma.
@@ -236,7 +239,7 @@ sir.model.run <- function(years = 50, N = 1, init = list(init_S = 0.99,init_I = 
 #' }
 #' @importFrom deSolve ode
 #' @importFrom EpiEstim estimate_R make_config
-#' @importFrom dplyr mutate group_by summarise ungroup select starts_with
+#' @importFrom dplyr mutate group_by summarise ungroup select starts_with select left_join filter arrange
 #' @importFrom tidyr pivot_wider
 #' @importFrom tibble tibble
 #' @importFrom stats coef lm rnorm sd pexp
@@ -256,12 +259,13 @@ utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
                          "CI", "test_positivity", "test_positivity_sim",
                          "day_of_year", "true_disease", "ppv", "npv",
-                         "test_result_overall", "day_of_season"))
+                         "test_result_overall", "day_of_season", "test_result_updated"))
 #' @export sim.test.data.time
 sim.test.data.time <- function(sim_size = 1000, days = 365,
                                test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                                   test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
                                seed=953,
+                               sequential_testing = FALSE, seq_order = NULL,
                                Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
                                mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval distribution
                                years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
@@ -275,16 +279,62 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
     test_id = names(test_params),
     sens = sapply(test_params, function(x) x$sens),
     spec = sapply(test_params, function(x) x$spec),
-    p_performed = sapply(test_params, function(x) x$p_performed)
+    p_performed = sapply(test_params, function(x) x$p_performed),
+    seq_order = 1 #default all tests done in parallel
   )
 
-  overall_sens <- 1 - prod(1 - tests$sens)
-  overall_spec <- prod(tests$spec)
+  max_seq <- max(tests$seq_order)
 
+
+  #if sequential testing, update seq_order with parallel testing groups:
+  if(sequential_testing) {
+
+    #  Check seq_order correctly specified
+    if (is.null(seq_order)) {
+      stop("Error: 'seq_order' must be provided when sequential_testing = TRUE.")
+    }
+    if (!setequal(names(seq_order), names(test_params))) {
+      stop("Error: Names in 'seq_order' must match test IDs in 'test_params'.")
+    }
+
+    seq_map <- tibble::tibble(
+      test_id = names(seq_order),
+      seq_order = unlist(seq_order)
+    )
+
+    tests <- tests %>%
+      dplyr::select(-seq_order) %>%
+      dplyr::left_join(seq_map, by=c("test_id"))
+
+    #defining overall sens/spec of tests for sequenial or parallel testing
+    overall_sens_parallel <- c()
+    overall_spec_parallel <- c()
+
+    for(i in 1:max_seq) {
+
+      tests_parallel <- dplyr::filter(tests, seq_order == i)
+
+      overall_sens_parallel[i] <- 1 - prod(1 - tests_parallel$sens)
+      overall_spec_parallel[i] <- prod(tests_parallel$spec)
+
+    }
+
+    overall_sens <- prod(overall_sens_parallel)
+    overall_spec <- 1 - prod(1 - overall_spec_parallel)
+
+  } else {
+
+    overall_sens <- 1 - prod(1 - tests$sens)
+    overall_spec <- prod(tests$spec)
+
+  }
+
+
+
+  # SIR model output
   if (is.null(mean_gi)) mean_gi <- 1 / params$gamma
   if (is.null(max_t)) max_t <- 5 * mean_gi
 
-  # SIR model output
   sir_output <- sir.model.run(years=years, N=N, init=init, params=params)
 
   # Function to extract prevalence from final year SIR model output
@@ -335,6 +385,35 @@ sim.test.data.time <- function(sim_size = 1000, days = 365,
       sens = sens,
       spec = spec
     )
+
+
+  #if sequential testing, then remove subsequent test results if no results in parallel testing group (seq_order) are positive:
+  if(sequential_testing) {
+
+    synth_data <- synth_data %>%
+      dplyr::ungroup() %>%
+      dplyr::arrange(day_of_year, pat_id, seq_order, test_id) %>%
+      dplyr::group_by(day_of_year, pat_id) %>%
+      # propagate NAs down seq_order
+      dplyr::mutate(test_result_updated = {
+        seq_orders <- unique(seq_order)
+        result <- test_result
+        for (i in seq_along(seq_orders)) {
+          current_seq <- seq_orders[i]
+          if (i == 1) next  # keep seq_order 1 as is
+          prev_seq <- seq_orders[i - 1]
+          # if all previous seq_order results are NA/0, set current to NA
+          if (all(result[seq_order == prev_seq] %in% c(NA, 0))) { # result[seq_order == prev_seq] selects all test results from the previous step (group of parallel tests).
+            result[seq_order == current_seq] <- NA_real_ #result[seq_order == current_seq] selects all rows in the current step
+          }
+        }
+        result  }
+      ) %>%
+      ungroup() %>%
+      dplyr::mutate(test_result = test_result_updated) %>%
+      dplyr::select(-test_result_updated)
+  }
+
 
   # wide format
   wide_synth_data <- synth_data %>%

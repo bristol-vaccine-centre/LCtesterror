@@ -41,6 +41,11 @@ list(prev_prior= "beta(1,1)", RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)",
 
 \item{delay_effect_fn}{Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)}
 
+\item{sequential_testing}{Logical. For simulated data, are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.}
+
+\item{seq_order}{Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.}
+
 \item{set.seed}{Random seed for set.seed(). Default = 9876.}
 }
 \value{

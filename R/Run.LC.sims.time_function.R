@@ -24,6 +24,9 @@
 #' list(RE_prior= "normal(0,1), "bpos_prior= "gamma(1,1)", bneg_prior= "gamma(1,1)",
 #' gaussian_prev_amplitude_prior= "beta(1,1)", gaussian_prev_baseline_prior= "beta(1,1)", mean_gaussian_prior= "uniform(0,52)", sigma_gaussian_prior = "normal(0,10)",
 #' exp_prev_baseline_prior= "beta(1,1)", exp_growth_rate_prior= "gamma(1,5)")
+#' @param sequential_testing Logical. For simulated data, are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.
+#' @param seq_order Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+#' Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.
 #' @param seed Random seed for set.seed(). Default = 953.
 #' @param Est_R_window Size, in number of days, of sliding window for custom R(t) estimation. Default = 14.
 #' @param Est_R_n_samples Number of samples for uncertainty estimation in custom R(t). Default = 1000.
@@ -115,6 +118,7 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
                                       prior_spec = NULL, prior_sens = NULL,
                                       other_priors  = list(),
                                       seed = 953,
+                                      sequential_testing = FALSE, seq_order = NULL,
                                       Est_R_window = 14, Est_R_n_samples = 1000, #for my R method
                                       mean_gi = NULL, max_t = NULL, #For EpiEstim - Generation interval (mean and SD)
                                       years = 50, N = 1, init = list(init_S = 0.99,init_I = 0.01,init_R = 0),
@@ -162,7 +166,9 @@ run.sims.LC.time <- function(num_tests, days = 365, spec_vec= c(1), sens_vec= c(
   if (time_model == "exponential") {
 
     sim_data <- sim.test.data.exp(sim_size=sim_size, days=days, test_params=test_params,
-                                   seed=seed, Est_R_window = Est_R_window, Est_R_n_samples = Est_R_n_samples,
+                                   seed=seed,
+                                   sequential_testing=sequential_testing, seq_order=seq_order,
+                                   Est_R_window = Est_R_window, Est_R_n_samples = Est_R_n_samples,
                                    mean_gi = mean_gi, max_t = max_t,
                                    params =exp_params)
 

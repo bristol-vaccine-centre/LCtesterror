@@ -9,6 +9,9 @@
 #' @param test_params Test parameters used to simulate test results along with true prevalence. Given as a list of lists for each test containing sensitivity (sens =), specificity (spec =), and probability that the test is performed (p_performed = ).
 #' Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1), test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
 #' @param seed for set.seed(). Default = 953.
+#' @param sequential_testing Logical. Are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.
+#' @param seq_order Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+#' Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.
 #' @param delay Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.
 #' @param delay_distribution Optional specified distribution of delay effect. A function that takes an integer `n` and returns a vector of length `n` representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).
 #' @param delay_effect_fn Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)
@@ -18,7 +21,7 @@
 #'   \item{test_results}{Simulated binary test results for each individual (N=sim_size), based on specified true prev, sens and spec parameters.
 #'         If delay = TRUE, additional delay columns are included specifying the delay for each test.}
 #' }
-#' @importFrom dplyr filter group_by summarise mutate n cross_join select case_when rowwise left_join
+#' @importFrom dplyr filter group_by ungroup summarise mutate n cross_join select case_when rowwise left_join arrange
 #' @importFrom magrittr %>%
 #' @importFrom tibble tibble
 #' @importFrom stats rbinom na.omit quantile
@@ -49,7 +52,7 @@
 utils::globalVariables(c("test_id", "p_performed", "true_prev", "sens", "spec",
                          "pat_id", "test_result", "any_positive",
                          "CI", "test_positivity", "delay_days", "adj_sens",
-                         "test_positivity_sim", "sens_sim"))
+                         "test_positivity_sim", "sens_sim", "test_result_updated"))
 
 default_delay_distribution <- function(n) sample(0:14, n, replace = TRUE)
 
@@ -62,9 +65,13 @@ sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
                           test_params = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = list(sens = 0.99, spec = 0.99, p_performed = 1),
                                              test3 = list(sens = 0.98, spec = 0.98, p_performed = 0.8), test4 = list(sens = 0.98, spec = 0.98, p_performed = 0.8)),
                           seed = 953,
+                          sequential_testing = FALSE, seq_order = NULL,
                           delay = FALSE, delay_distribution = default_delay_distribution,
                           delay_effect_fn = default_delay_effect
                           ) {
+
+  #** need to add overall_sens / spec and ppv/npv to output as in the time simu functions
+  #(and think about how the delay effect is included)
 
   set.seed(seed)
 
@@ -72,9 +79,72 @@ sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
     test_id = names(test_params),
     sens = sapply(test_params, function(x) x$sens),
     spec = sapply(test_params, function(x) x$spec),
-    p_performed = sapply(test_params, function(x) x$p_performed)
+    p_performed = sapply(test_params, function(x) x$p_performed),
+    seq_order = 1 #default all tests done in parallel
   )
 
+  max_seq <- max(tests$seq_order)
+
+
+  #if sequential testing, update seq_order with parallel testing groups:
+  if(sequential_testing) {
+
+    #  Check seq_order correctly specified
+    if (is.null(seq_order)) {
+      stop("Error: 'seq_order' must be provided when sequential_testing = TRUE.")
+    }
+    if (!setequal(names(seq_order), names(test_params))) {
+      stop("Error: Names in 'seq_order' must match test IDs in 'test_params'.")
+    }
+
+    seq_map <- tibble::tibble(
+      test_id = names(seq_order),
+      seq_order = unlist(seq_order)
+    )
+
+    tests <- tests %>%
+      dplyr::select(-seq_order) %>%
+      dplyr::left_join(seq_map, by=c("test_id"))
+
+    #defining overall sens/spec of tests for sequenial or parallel testing
+    overall_sens_parallel <- c()
+    overall_spec_parallel <- c()
+
+    for(i in 1:max_seq) {
+
+      tests_parallel <- dplyr::filter(tests, seq_order == i)
+
+      overall_sens_parallel[i] <- 1 - prod(1 - tests_parallel$sens)
+      overall_spec_parallel[i] <- prod(tests_parallel$spec)
+
+    }
+
+    overall_sens <- prod(overall_sens_parallel)
+    overall_spec <- 1 - prod(1 - overall_spec_parallel)
+
+  } else {
+
+    overall_sens <- 1 - prod(1 - tests$sens)
+    overall_spec <- prod(tests$spec)
+
+  }
+
+
+
+  # Function to calculate PPV
+  calculate_ppv <- function(sens, spec, prev) {
+    ppv <- (sens * prev) / ((sens * prev) + ((1 - spec) * (1 - prev)))
+    return(ppv)
+  }
+
+  # Function to calculate NPV
+  calculate_npv <- function(sens, spec, prev) {
+    npv <- (spec * (1 - prev)) / (((1 - sens) * prev) + (spec * (1 - prev)))
+    return(npv)
+  }
+
+
+  #simulate data:
   synth_data <- tibble::tibble(
     pat_id = 1:sim_size,
     true_prev = sample(c(rep(1, sim_size * disease_prev), rep(0, sim_size * (1 - disease_prev))),
@@ -84,6 +154,7 @@ sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
     dplyr::mutate(delay_days = if (delay == TRUE) delay_distribution(n()) else 0
     ) %>%
     dplyr::group_by(test_id) %>%
+    #adj_sens = sens after adjustment for delay effect (even if 0):
     dplyr::mutate(adj_sens = if (delay == TRUE) delay_effect_fn(delay_days, sens) else sens
       ) %>%
     dplyr::mutate(
@@ -96,6 +167,35 @@ sim.test.data <- function(disease_prev = 0.2, sim_size = 1000,
         # test delay included here
       )
     )
+
+
+  #if sequential testing, then remove subsequent test results if no results in parallel testing group (seq_order) are positive:
+  if(sequential_testing) {
+
+    synth_data <- synth_data %>%
+      dplyr::ungroup() %>%
+      dplyr::arrange(pat_id, seq_order, test_id) %>%
+      dplyr::group_by(pat_id) %>%
+      # propagate NAs down seq_order
+      dplyr::mutate(test_result_updated = {
+        seq_orders <- unique(seq_order)
+        result <- test_result
+        for (i in seq_along(seq_orders)) {
+          current_seq <- seq_orders[i]
+          if (i == 1) next  # keep seq_order 1 as is
+          prev_seq <- seq_orders[i - 1]
+          # if all previous seq_order results are NA/0, set current to NA
+          if (all(result[seq_order == prev_seq] %in% c(NA, 0))) { # result[seq_order == prev_seq] selects all test results from the previous step (group of parallel tests).
+            result[seq_order == current_seq] <- NA_real_ #result[seq_order == current_seq] selects all rows in the current step
+          }
+        }
+        result  }
+      ) %>%
+      ungroup() %>%
+      dplyr::mutate(test_result = test_result_updated) %>%
+      dplyr::select(-test_result_updated)
+  }
+
 
   # data set with a test per column (1-pos, 0-neg, NA-not done)
   # Pivot wider

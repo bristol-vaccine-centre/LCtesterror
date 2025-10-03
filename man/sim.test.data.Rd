@@ -13,6 +13,11 @@ Default = list(test1 = list(sens = 0.99, spec = 0.99, p_performed = 1), test2 = 
 
 \item{seed}{for set.seed(). Default = 953.}
 
+\item{sequential_testing}{Logical. Are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.}
+
+\item{seq_order}{Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.}
+
 \item{delay}{Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.}
 
 \item{delay_distribution}{Optional specified distribution of delay effect. A function that takes an integer \code{n} and returns a vector of length \code{n} representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).}

@@ -27,6 +27,9 @@
 #' @param delay Logical indicating whether to simulate effects of 'delay until testing' on sensitivity. Default = FALSE.
 #' @param delay_distribution Optional specified distribution of delay effect. A function that takes an integer `n` and returns a vector of length `n` representing individual-specific delays. Default = sample(0:14, n, replace = TRUE).
 #' @param delay_effect_fn Optional function to simulate effects of 'delay until testing' on sensitivity. Default = function(delay_day, sens) pmax(sens - 0.02 * delay_day, 0.5)
+#' @param sequential_testing Logical. For simulated data, are any tests only performed if the previous test / parallel set of tests was positive? Assumes the same sample is used for testing (i.e no time lag). FALSE means all tests are performed in parallel. Default = FALSE.
+#' @param seq_order Must be specified if sequential_testing is TRUE. A list of test ID's (to match those in test_params) with a number specifying the order in which the test occurs if testing sequentially conditional on a positive test result.
+#' Multiple tests can be performed in parallel at each testing stage and therefore will have the same seq_order number. E.g list(test1=1, test2=1, test3=2, test4=2) Default = NULL.
 #' @param set.seed Random seed for set.seed(). Default = 9876.
 #' @return Stan model fit and various summary outputs.
 #' A list containing:
@@ -95,6 +98,7 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
                         prior_spec = NULL, prior_sens = NULL, prior_delay = NULL, other_priors= list(),
                         delay = FALSE, delay_distribution = default_delay_distribution,
                         delay_effect_fn = default_delay_effect,
+                        sequential_testing = FALSE, seq_order = NULL,
                         set.seed = 9876
 ) {
 
@@ -133,7 +137,8 @@ run.sims.LC <- function(num_tests, prev_vec= c(0.2), spec_vec= c(1), sens_vec= c
   # Run model for each parameter combo:
   # Simulate data
           sim_data <- sim.test.data(disease_prev= p, sim_size=sim_size, test_params=test_params,
-                                    delay = delay, delay_distribution=delay_distribution, delay_effect_fn=delay_effect_fn)
+                                    delay = delay, delay_distribution=delay_distribution, delay_effect_fn=delay_effect_fn,
+                                    sequential_testing=sequential_testing, seq_order=seq_order)
 
           result_name <- paste("sens_", s, "_spec_", c, "_prev_", p, "_p_", r, sep = "")
 

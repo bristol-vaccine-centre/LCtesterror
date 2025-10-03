@@ -1,3 +1,4 @@
+
 test_that("LC model runs with sim data (no delay or dependence)", {
 
   test_params <- list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8),
@@ -189,3 +190,60 @@ test_that("LC model with exponential time simulation runs", {
   expect_true(nrow(results$stan_results_df) > nrow(results$sim_inputs))
   expect_true(nrow(results$sim_data) > nrow(results$sim_inputs))
 })
+
+
+test_that("LC model runs with sim data with sequential testing (no delay or dependence)", {
+
+  test_params <- list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8),
+                      test3 = list(sens = 0.95, spec = 0.98, p_performed = 1), test4 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
+
+  num_tests=4
+  iter=500
+  chains=2
+  warmup=200
+  data_ID = "sim"
+
+  sim_results <- sim.test.data(disease_prev = 0.2, sim_size = 1000, test_params = test_params,
+                               sequential_testing=TRUE, seq_order=list(test1 = 1, test2 = 1, test3 = 2, test4 =3))
+
+  test <- run.LC.model(data=sim_results$test_results, num_tests=num_tests,
+                       iter=iter, chains=chains, warmup=warmup)
+
+  expect_false(is.null(test$stan_fit))
+
+})
+
+test_that("LC model runs with time with sim data with sequential testing (no delay or dependence)", {
+
+  test_params <- list(test1 = list(sens = 0.95, spec = 0.98, p_performed = 1), test2 = list(sens = 0.90, spec = 0.97, p_performed = 0.8),
+                      test3 = list(sens = 0.95, spec = 0.98, p_performed = 1), test4 = list(sens = 0.90, spec = 0.97, p_performed = 0.8))
+
+  num_tests=4
+  iter=500
+  chains=2
+  warmup=200
+  data_ID = "sim_time"
+  seq_order=list(test1 = 1, test2 = 1, test3 = 2, test4 =3)
+
+  #gaussian
+  sim_results <- sim.test.data.time(sim_size = 10, test_params = test_params,
+                                    sequential_testing=TRUE, seq_order=seq_order )
+
+  test <- run.LC.model(data=sim_results$test_results, num_tests=num_tests,
+                       iter=iter, chains=chains, warmup=warmup,
+                       covariates = c("time"))
+
+  #exponential
+  sim_results_exp <- sim.test.data.exp(sim_size = 10, test_params = test_params,
+                                       sequential_testing=TRUE, seq_order=seq_order)
+
+  test_exp <- run.LC.model(data=sim_results_exp$test_results, num_tests=num_tests,
+                           iter=iter, chains=chains, warmup=warmup,
+                           covariates = c("time"), time_model = "exponential")
+
+  expect_false(is.null(test$stan_fit))
+  expect_false(is.null(test_exp$stan_fit))
+
+})
+
+
